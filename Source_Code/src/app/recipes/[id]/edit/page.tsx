@@ -11,7 +11,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const recipe = getRecipeById(id);
+  const recipe = await getRecipeById(id);
   return {
     title: recipe ? `Edit ${recipe.title} | RecipeBox` : "Edit Recipe | RecipeBox",
   };
@@ -25,7 +25,7 @@ export default async function EditRecipePage({ params }: PageProps) {
   }
 
   const { id } = await params;
-  const recipe = getRecipeById(id);
+  const recipe = await getRecipeById(id);
 
   if (!recipe) {
     notFound();
