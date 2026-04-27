@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { DashboardClient } from "@/components/DashboardClient";
 import { getCurrentUserFromCookies } from "@/lib/auth-server";
-import { getAllRecipes } from "@/lib/recipes";
+import { getRecipesByAuthor } from "@/lib/recipes";
 
 export default async function DashboardPage() {
   const user = await getCurrentUserFromCookies();
@@ -10,7 +10,7 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const recipes = getAllRecipes();
+  const recipes = getRecipesByAuthor(user.id);
 
   return <DashboardClient user={user} recipes={recipes} />;
 }
