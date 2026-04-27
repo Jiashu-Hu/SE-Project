@@ -9,15 +9,14 @@ vi.mock("next/headers", () => ({
   }),
 }));
 
-import * as pwRoute from "@/app/api/auth/profile/password/route";
+// The password change route exports POST.
+import { POST as handler } from "@/app/api/auth/profile/password/route";
 import { authenticateUser, registerUser, createSession } from "@/lib/auth";
 import { AUTH_SESSION_COOKIE } from "@/lib/auth-constants";
 
-const handler = pwRoute.PATCH ?? pwRoute.PUT ?? pwRoute.POST;
-
 function makeRequest(body: unknown): Request {
   return new Request("http://localhost/api/auth/profile/password", {
-    method: "PATCH",
+    method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });

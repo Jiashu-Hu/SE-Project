@@ -17,7 +17,7 @@ beforeEach(() => cookieJar.clear());
 
 describe("GET /api/auth/me", () => {
   it("returns 401 when no session cookie is present", async () => {
-    const res = await GET(new Request("http://localhost/api/auth/me"));
+    const res = await GET();
     expect(res.status).toBe(401);
   });
 
@@ -31,7 +31,7 @@ describe("GET /api/auth/me", () => {
     const session = createSession(reg.user.id);
     cookieJar.set(AUTH_SESSION_COOKIE, session.token);
 
-    const res = await GET(new Request("http://localhost/api/auth/me"));
+    const res = await GET();
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.user.email).toBe("alice@example.com");

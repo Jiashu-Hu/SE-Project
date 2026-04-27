@@ -9,13 +9,10 @@ vi.mock("next/headers", () => ({
   }),
 }));
 
-// Import the route AFTER vi.mock is registered.
-import * as profileRoute from "@/app/api/auth/profile/route";
+// Import the route AFTER vi.mock is registered. The profile route exports PATCH.
+import { PATCH as handler } from "@/app/api/auth/profile/route";
 import { registerUser, createSession } from "@/lib/auth";
 import { AUTH_SESSION_COOKIE } from "@/lib/auth-constants";
-
-const handler =
-  profileRoute.PATCH ?? profileRoute.PUT ?? profileRoute.POST;
 
 function makeRequest(body: unknown): Request {
   return new Request("http://localhost/api/auth/profile", {
