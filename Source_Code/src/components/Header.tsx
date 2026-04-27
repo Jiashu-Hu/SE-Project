@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -78,12 +79,12 @@ export function Header({ searchQuery, onSearchChange, userName }: HeaderProps) {
         </div>
 
         {/* Add Recipe Button */}
-        <button
-          type="button"
+        <Link
+          href="/recipes/new"
           className="shrink-0 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
         >
           + Add Recipe
-        </button>
+        </Link>
 
         {/* Profile Dropdown */}
         <div className="relative">
@@ -97,12 +98,13 @@ export function Header({ searchQuery, onSearchChange, userName }: HeaderProps) {
           </button>
           {profileOpen && (
             <div className="absolute right-0 mt-2 w-40 rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
-              <button
-                type="button"
+              <Link
+                href="/settings"
+                onClick={() => setProfileOpen(false)}
                 className="block w-full px-4 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
               >
                 Settings
-              </button>
+              </Link>
               <button
                 type="button"
                 onClick={handleLogout}

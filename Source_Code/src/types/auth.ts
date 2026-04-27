@@ -22,3 +22,13 @@ export interface LoginPayload {
   readonly email: string;
   readonly password: string;
 }
+
+export interface UpdateProfilePayload {
+  readonly name: string;
+  readonly email: string;
+}
+
+export interface ChangePasswordPayload {
+  readonly currentPassword: string;
+  readonly newPassword: string;
+}

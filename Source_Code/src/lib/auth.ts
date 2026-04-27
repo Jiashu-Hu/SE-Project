@@ -17,17 +17,58 @@ interface RegisterInput {
   readonly password: string;
 }
 
+interface UpdateProfileInput {
+  readonly userId: string;
+  readonly name: string;
+  readonly email: string;
+}
+
+interface ChangePasswordInput {
+  readonly userId: string;
+  readonly currentPassword: string;
+  readonly newPassword: string;
+}
+
 const HASH_ITERATIONS = 120_000;
 const KEY_LENGTH = 64;
 const DIGEST = "sha512";
 const SESSION_DURATION_MS = 1000 * 60 * 60 * 24 * 7;
+const RESET_TOKEN_DURATION_MS = 1000 * 60 * 60; // 1 hour
 const MOCK_USER_EMAIL = "test@test.com";
 const MOCK_USER_PASSWORD = "test";
 const MOCK_USER_NAME = "Test User";
 
+interface PasswordResetToken {
+  readonly token: string;
+  readonly userId: string;
+  readonly expiresAt: string;
+}
+
+interface PasswordResetStore {
+  readonly tokensByValue: Map<string, PasswordResetToken>;
+}
+
 const globalForAuth = globalThis as typeof globalThis & {
   authStore?: AuthStore;
+  passwordResetStore?: PasswordResetStore;
 };
+
+function getPasswordResetStore(): PasswordResetStore {
+  if (!globalForAuth.passwordResetStore) {
+    globalForAuth.passwordResetStore = { tokensByValue: new Map() };
+  }
+  return globalForAuth.passwordResetStore;
+}
+
+function cleanupExpiredResetTokens(): void {
+  const now = Date.now();
+  const store = getPasswordResetStore();
+  for (const [token, entry] of store.tokensByValue.entries()) {
+    if (new Date(entry.expiresAt).getTime() <= now) {
+      store.tokensByValue.delete(token);
+    }
+  }
+}
 
 function getAuthStore(): AuthStore {
   if (!globalForAuth.authStore) {
@@ -78,6 +119,16 @@ function isPasswordMatch(password: string, salt: string, expectedHash: string): 
 function toPublicUser(user: StoredUser): AuthUser {
   const { id, name, email, createdAt } = user;
   return { id, name, email, createdAt };
+}
+
+function getStoredUserById(userId: string): StoredUser | null {
+  for (const user of getAuthStore().usersByEmail.values()) {
+    if (user.id === userId) {
+      return user;
+    }
+  }
+
+  return null;
 }
 
 function cleanupExpiredSessions(): void {
@@ -167,10 +218,9 @@ export function getUserBySessionToken(token: string): AuthUser | null {
     return null;
   }
 
-  for (const user of getAuthStore().usersByEmail.values()) {
-    if (user.id === session.userId) {
-      return toPublicUser(user);
-    }
+  const user = getStoredUserById(session.userId);
+  if (user) {
+    return toPublicUser(user);
   }
 
   return null;
@@ -178,4 +228,127 @@ export function getUserBySessionToken(token: string): AuthUser | null {
 
 export function deleteSession(token: string): void {
   getAuthStore().sessionsByToken.delete(token);
+}
+
+export function updateUserProfile(input: UpdateProfileInput):
+  | { readonly user: AuthUser }
+  | { readonly error: string } {
+  const store = getAuthStore();
+  const existingUser = getStoredUserById(input.userId);
+
+  if (!existingUser) {
+    return { error: "User not found." };
+  }
+
+  const normalizedEmail = normalizeEmail(input.email);
+  const emailOwner = store.usersByEmail.get(normalizedEmail);
+  if (emailOwner && emailOwner.id !== existingUser.id) {
+    return { error: "An account with this email already exists." };
+  }
+
+  const updatedUser: StoredUser = {
+    ...existingUser,
+    name: input.name.trim(),
+    email: normalizedEmail,
+  };
+
+  if (normalizedEmail !== existingUser.email) {
+    store.usersByEmail.delete(existingUser.email);
+  }
+
+  store.usersByEmail.set(normalizedEmail, updatedUser);
+  return { user: toPublicUser(updatedUser) };
+}
+
+export function changeUserPassword(input: ChangePasswordInput):
+  | { readonly success: true }
+  | { readonly error: string } {
+  const store = getAuthStore();
+  const existingUser = getStoredUserById(input.userId);
+
+  if (!existingUser) {
+    return { error: "User not found." };
+  }
+
+  if (
+    !isPasswordMatch(
+      input.currentPassword,
+      existingUser.passwordSalt,
+      existingUser.passwordHash
+    )
+  ) {
+    return { error: "Current password is incorrect." };
+  }
+
+  if (input.currentPassword === input.newPassword) {
+    return {
+      error: "New password must be different from your current password.",
+    };
+  }
+
+  const newSalt = randomBytes(16).toString("hex");
+  const updatedUser: StoredUser = {
+    ...existingUser,
+    passwordSalt: newSalt,
+    passwordHash: hashPassword(input.newPassword, newSalt),
+  };
+
+  store.usersByEmail.set(existingUser.email, updatedUser);
+  return { success: true };
+}
+
+export function createPasswordResetToken(
+  email: string
+): { readonly token: string } | { readonly error: string } {
+  cleanupExpiredResetTokens();
+
+  const normalizedEmail = normalizeEmail(email);
+  const user = getAuthStore().usersByEmail.get(normalizedEmail);
+
+  if (!user) {
+    // Return a generic message to avoid leaking whether an email exists.
+    return { token: "" };
+  }
+
+  const expiresAt = new Date(Date.now() + RESET_TOKEN_DURATION_MS).toISOString();
+  const token = randomUUID();
+
+  getPasswordResetStore().tokensByValue.set(token, {
+    token,
+    userId: user.id,
+    expiresAt,
+  });
+
+  return { token };
+}
+
+export function resetPasswordWithToken(
+  token: string,
+  newPassword: string
+): { readonly success: true } | { readonly error: string } {
+  cleanupExpiredResetTokens();
+
+  const store = getPasswordResetStore();
+  const entry = store.tokensByValue.get(token);
+
+  if (!entry) {
+    return { error: "Invalid or expired reset token." };
+  }
+
+  const user = getStoredUserById(entry.userId);
+  if (!user) {
+    return { error: "User not found." };
+  }
+
+  const newSalt = randomBytes(16).toString("hex");
+  const updatedUser: StoredUser = {
+    ...user,
+    passwordSalt: newSalt,
+    passwordHash: hashPassword(newPassword, newSalt),
+  };
+
+  getAuthStore().usersByEmail.set(user.email, updatedUser);
+  store.tokensByValue.delete(token);
+
+  return { success: true };
 }

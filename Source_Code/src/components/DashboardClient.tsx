@@ -4,12 +4,12 @@ import { useMemo, useState } from "react";
 import { Header } from "@/components/Header";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { RecipeGrid } from "@/components/RecipeGrid";
-import { MOCK_RECIPES } from "@/data/mock-recipes";
 import type { AuthUser } from "@/types/auth";
 import type { Category, Recipe } from "@/types/recipe";
 
 interface DashboardClientProps {
   readonly user: AuthUser;
+  readonly recipes: readonly Recipe[];
 }
 
 function sortByNewest(recipes: readonly Recipe[]): readonly Recipe[] {
@@ -32,13 +32,13 @@ function filterRecipes(
   });
 }
 
-export function DashboardClient({ user }: DashboardClientProps) {
+export function DashboardClient({ user, recipes }: DashboardClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<Category>("All");
 
   const filteredRecipes = useMemo(
-    () => sortByNewest(filterRecipes(MOCK_RECIPES, selectedCategory, searchQuery)),
-    [selectedCategory, searchQuery]
+    () => sortByNewest(filterRecipes(recipes, selectedCategory, searchQuery)),
+    [recipes, selectedCategory, searchQuery]
   );
 
   return (
@@ -57,7 +57,7 @@ export function DashboardClient({ user }: DashboardClientProps) {
           </p>
         </div>
 
-        <RecipeGrid recipes={filteredRecipes} />
+        <RecipeGrid recipes={filteredRecipes} totalRecipes={recipes.length} />
       </main>
     </div>
   );

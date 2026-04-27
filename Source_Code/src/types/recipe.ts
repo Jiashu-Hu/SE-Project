@@ -9,6 +9,7 @@ export const CATEGORIES = [
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
+export type RecipeCategory = Exclude<Category, "All">;
 
 export interface Ingredient {
   readonly amount: string;
@@ -18,9 +19,10 @@ export interface Ingredient {
 
 export interface Recipe {
   readonly id: string;
+  readonly authorId: string;
   readonly title: string;
   readonly description: string;
-  readonly category: Exclude<Category, "All">;
+  readonly category: RecipeCategory;
   readonly prepTime: number;
   readonly cookTime: number;
   readonly servings: number;
@@ -29,4 +31,16 @@ export interface Recipe {
   readonly instructions: readonly string[];
   readonly tags: readonly string[];
   readonly createdAt: string;
+}
+
+export interface CreateRecipePayload {
+  readonly title: string;
+  readonly description: string;
+  readonly category: RecipeCategory;
+  readonly prepTime: number;
+  readonly cookTime: number;
+  readonly servings: number;
+  readonly ingredients: readonly Ingredient[];
+  readonly instructions: readonly string[];
+  readonly tags: readonly string[];
 }

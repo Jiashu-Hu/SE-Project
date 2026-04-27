@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Recipe } from "@/types/recipe";
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -45,12 +46,13 @@ export function RecipeHero({ recipe }: RecipeHeroProps) {
       </div>
 
       {/* Hero Image */}
-      <div className="mb-6 flex h-64 items-center justify-center overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-900 sm:h-80 lg:h-96">
+      <div className="relative mb-6 flex h-64 items-center justify-center overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-900 sm:h-80 lg:h-96">
         {recipe.imageUrl ? (
-          <img
+          <Image
             src={recipe.imageUrl}
             alt={recipe.title}
-            className="h-full w-full object-cover"
+            fill
+            className="object-cover"
           />
         ) : (
           <svg

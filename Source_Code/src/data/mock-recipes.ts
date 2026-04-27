@@ -1,8 +1,11 @@
 import { Recipe } from "@/types/recipe";
 
+const SEED_AUTHOR_ID = "seed-test-user";
+
 export const MOCK_RECIPES: readonly Recipe[] = [
   {
     id: "1",
+    authorId: SEED_AUTHOR_ID,
     title: "Classic Pancakes",
     description: "Fluffy, golden pancakes perfect for a weekend breakfast. Simple ingredients create a delicious, crowd-pleasing dish.",
     category: "Breakfast",
@@ -35,6 +38,7 @@ export const MOCK_RECIPES: readonly Recipe[] = [
   },
   {
     id: "2",
+    authorId: SEED_AUTHOR_ID,
     title: "Caesar Salad",
     description: "Crisp romaine lettuce with homemade Caesar dressing, parmesan cheese, and crunchy croutons. A restaurant-quality salad at home.",
     category: "Lunch",
@@ -67,6 +71,7 @@ export const MOCK_RECIPES: readonly Recipe[] = [
   },
   {
     id: "3",
+    authorId: SEED_AUTHOR_ID,
     title: "Grilled Salmon",
     description: "Perfectly grilled salmon with a simple lemon-herb marinade. Light, healthy, and full of flavor.",
     category: "Dinner",
@@ -99,6 +104,7 @@ export const MOCK_RECIPES: readonly Recipe[] = [
   },
   {
     id: "4",
+    authorId: SEED_AUTHOR_ID,
     title: "Chocolate Lava Cake",
     description: "Decadent individual chocolate cakes with a molten center. An impressive dessert that's surprisingly easy to make.",
     category: "Dessert",
@@ -131,6 +137,7 @@ export const MOCK_RECIPES: readonly Recipe[] = [
   },
   {
     id: "5",
+    authorId: SEED_AUTHOR_ID,
     title: "Trail Mix Bites",
     description: "No-bake energy bites packed with nuts, seeds, and dried fruit. Perfect for a healthy snack on the go.",
     category: "Snacks",
@@ -162,6 +169,7 @@ export const MOCK_RECIPES: readonly Recipe[] = [
   },
   {
     id: "6",
+    authorId: SEED_AUTHOR_ID,
     title: "Avocado Toast",
     description: "Simple yet satisfying avocado toast with perfectly seasoned smashed avocado on crispy sourdough. A modern breakfast classic.",
     category: "Breakfast",

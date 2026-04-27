@@ -2,12 +2,18 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { AUTH_SESSION_COOKIE } from "@/lib/auth-constants";
 
-const PUBLIC_ROUTES = new Set(["/login", "/register"]);
+const PUBLIC_ROUTES = new Set([
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+]);
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
-  if (pathname.startsWith("/api/auth") || pathname.startsWith("/_next")) {
+  // Pass through Next.js internals and all API routes (handlers return their own errors)
+  if (pathname.startsWith("/api/") || pathname.startsWith("/_next")) {
     return NextResponse.next();
   }
 
