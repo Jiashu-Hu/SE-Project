@@ -26,9 +26,19 @@ export async function POST(request: Request) {
   }
 
   const result = createPasswordResetToken(email);
-
-  // Always respond with 200 to avoid leaking whether the email exists.
-  // Return token only when one was actually generated (non-empty string).
   const token = "token" in result ? result.token : "";
-  return NextResponse.json({ token: token || null });
+
+  // Always respond with 200 and an identical shape regardless of whether the
+  // email exists, to avoid leaking account enumeration.
+  //
+  // In a real deployment the token would be sent out-of-band via email. This
+  // app has no email infrastructure, so for local development we expose the
+  // token in the response under `devToken` to keep the demo flow workable.
+  // The token is NEVER included when NODE_ENV is "production".
+  const isProduction = process.env.NODE_ENV === "production";
+  if (!isProduction && token) {
+    return NextResponse.json({ ok: true, devToken: token });
+  }
+
+  return NextResponse.json({ ok: true });
 }

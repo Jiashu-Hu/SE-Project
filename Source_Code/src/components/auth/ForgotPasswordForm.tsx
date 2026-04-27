@@ -22,14 +22,19 @@ export function ForgotPasswordForm() {
         body: JSON.stringify({ email }),
       });
 
-      const body = (await response.json()) as { error?: string; token?: string | null };
+      const body = (await response.json()) as {
+        error?: string;
+        devToken?: string;
+      };
 
       if (!response.ok) {
         setError(body.error ?? "Something went wrong. Please try again.");
         return;
       }
 
-      setResetToken(body.token ?? null);
+      // devToken is only present in non-production builds. In production the
+      // token is delivered out-of-band (email) and never sent to the browser.
+      setResetToken(body.devToken ?? null);
       setSubmitted(true);
     } catch {
       setError("Something went wrong. Please try again.");
