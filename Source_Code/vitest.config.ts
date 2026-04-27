@@ -16,6 +16,7 @@ export default defineConfig({
         "src/test/**",
         "src/app/**/layout.tsx",
         "src/app/**/page.tsx",
+        "src/app/**/not-found.tsx",
         "src/components/**",
         "src/middleware.ts",
         "src/data/**",
