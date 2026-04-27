@@ -49,6 +49,12 @@ function toRecipe(row: RecipeRow): Recipe {
 const SELECT_COLUMNS =
   "id, author_id, title, description, category, prep_time, cook_time, servings, image_url, ingredients, instructions, tags, created_at";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isUuid(value: string): boolean {
+  return UUID_RE.test(value);
+}
+
 export async function getAllRecipes(): Promise<readonly Recipe[]> {
   const db = getDb();
   const result = await db.query<RecipeRow>(
@@ -58,6 +64,10 @@ export async function getAllRecipes(): Promise<readonly Recipe[]> {
 }
 
 export async function getRecipeById(id: string): Promise<Recipe | undefined> {
+  // Guard against malformed UUIDs so callers get "not found" instead of a 500
+  // from the Postgres uuid parser.
+  if (!isUuid(id)) return undefined;
+
   const db = getDb();
   const result = await db.query<RecipeRow>(
     `select ${SELECT_COLUMNS} from recipes where id = $1 limit 1`,
@@ -114,6 +124,8 @@ export async function updateRecipe(
   id: string,
   payload: CreateRecipePayload
 ): Promise<Recipe | null> {
+  if (!isUuid(id)) return null;
+
   const db = getDb();
   const result = await db.query<RecipeRow>(
     `update recipes
@@ -146,6 +158,8 @@ export async function updateRecipe(
 }
 
 export async function deleteRecipe(id: string): Promise<boolean> {
+  if (!isUuid(id)) return false;
+
   const db = getDb();
   const result = await db.query(
     `delete from recipes where id = $1`,

@@ -14,7 +14,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   }
 
   const { id } = await params;
-  const recipe = getRecipeById(id);
+  const recipe = await getRecipeById(id);
 
   if (!recipe) {
     return NextResponse.json({ error: "Recipe not found." }, { status: 404 });
@@ -36,7 +36,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
-  const updated = updateRecipe(id, result.payload);
+  const updated = await updateRecipe(id, result.payload);
   if (!updated) {
     return NextResponse.json({ error: "Recipe not found." }, { status: 404 });
   }
@@ -51,7 +51,7 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
   }
 
   const { id } = await params;
-  const recipe = getRecipeById(id);
+  const recipe = await getRecipeById(id);
 
   if (!recipe) {
     return NextResponse.json({ error: "Recipe not found." }, { status: 404 });
@@ -61,6 +61,6 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 
-  deleteRecipe(id);
+  await deleteRecipe(id);
   return new NextResponse(null, { status: 204 });
 }
