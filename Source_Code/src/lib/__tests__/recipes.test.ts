@@ -91,4 +91,18 @@ describe("recipes store (Postgres-backed)", () => {
       await deleteRecipe("00000000-0000-0000-0000-000000000000")
     ).toBe(false);
   });
+
+  describe("malformed-id guards", () => {
+    it("getRecipeById returns undefined for a non-UUID string", async () => {
+      expect(await getRecipeById("not-a-uuid")).toBeUndefined();
+    });
+
+    it("updateRecipe returns null for a non-UUID string", async () => {
+      expect(await updateRecipe("not-a-uuid", samplePayload)).toBeNull();
+    });
+
+    it("deleteRecipe returns false for a non-UUID string", async () => {
+      expect(await deleteRecipe("not-a-uuid")).toBe(false);
+    });
+  });
 });
