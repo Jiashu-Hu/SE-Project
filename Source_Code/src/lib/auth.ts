@@ -32,7 +32,7 @@ interface ChangePasswordInput {
 const HASH_ITERATIONS = 120_000;
 const KEY_LENGTH = 64;
 const DIGEST = "sha512";
-const SESSION_DURATION_MS = 1000 * 60 * 60 * 24 * 7;
+const SESSION_DURATION_MS = 1000 * 60 * 60 * 24;
 const RESET_TOKEN_DURATION_MS = 1000 * 60 * 60; // 1 hour
 const MOCK_USER_EMAIL = "test@test.com";
 const MOCK_USER_PASSWORD = "test";
