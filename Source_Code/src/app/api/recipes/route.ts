@@ -22,6 +22,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
-  const recipe = createRecipe(user.id, result.payload);
+  const recipe = await createRecipe(user.id, result.payload);
   return NextResponse.json({ recipe }, { status: 201 });
 }
