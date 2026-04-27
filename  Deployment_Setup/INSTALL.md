@@ -147,18 +147,39 @@ npx next --version
 
 ### Configuration Files
 
-This application uses **in-memory storage** and requires **no external databases** or environment variables for basic operation.
+This application requires a Postgres database for recipes. Auth (users,
+sessions, password reset tokens) is still in-memory in this phase and
+needs no configuration.
 
-#### Default Configuration
+#### Database setup (Supabase)
 
-The application includes built-in defaults:
+1. Create a free Supabase project at https://supabase.com.
+2. In your project dashboard: **SQL Editor → New query**, paste the
+   contents of `Source_Code/supabase/schema.sql`, and run it.
+3. Get your connection string: **Project Settings → Database → Connection
+   string → URI**. Copy the **Session** pooler URI (recommended for
+   Vercel deployments) or the direct URI (for local dev).
+4. Copy `Source_Code/.env.local.example` to `Source_Code/.env.local` and
+   fill in `DATABASE_URL`.
+5. Verify the connection:
 
-- **Mock User Credentials:**
-  - Email: `test@test.com`
-  - Password: `test`
+   ```bash
+   cd Source_Code
+   npm run dev
+   ```
 
-- **Session Duration:** 7 days
-- **Authentication:** PBKDF2 with SHA-512 (120,000 iterations)
+   Then sign in (test@test.com / test) and create a recipe. Restart
+   `npm run dev` — the recipe should still be there.
+
+#### Mock User Credentials (still in-memory)
+
+- Email: `test@test.com`
+- Password: `test`
+
+#### Session Duration
+
+- 24 hours
+- Authentication: PBKDF2 with SHA-512 (120,000 iterations)
 
 ### Optional Environment Variables
 
