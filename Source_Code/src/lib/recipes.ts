@@ -33,6 +33,12 @@ export function getAllRecipes(): readonly Recipe[] {
   return Array.from(getRecipeStore().recipesById.values());
 }
 
+export function getRecipesByAuthor(authorId: string): readonly Recipe[] {
+  return Array.from(getRecipeStore().recipesById.values()).filter(
+    (recipe) => recipe.authorId === authorId
+  );
+}
+
 export function getRecipeById(id: string): Recipe | undefined {
   return getRecipeStore().recipesById.get(id);
 }
