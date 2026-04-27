@@ -10,7 +10,7 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const recipes = getRecipesByAuthor(user.id);
+  const recipes = await getRecipesByAuthor(user.id);
 
   return <DashboardClient user={user} recipes={recipes} />;
 }
