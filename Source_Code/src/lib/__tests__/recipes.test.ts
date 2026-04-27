@@ -21,50 +21,47 @@ const samplePayload: CreateRecipePayload = {
   tags: [],
 };
 
-describe("recipes store", () => {
-  it("seeds mock recipes under the test user", () => {
-    const all = getAllRecipes();
-    expect(all.length).toBeGreaterThan(0);
-    for (const r of all) {
-      expect(r.authorId).toBe("seed-test-user");
-    }
+describe("recipes store (Postgres-backed)", () => {
+  it("getAllRecipes returns [] on an empty database", async () => {
+    expect(await getAllRecipes()).toEqual([]);
   });
 
-  it("getRecipeById returns the seeded recipe", () => {
-    const all = getAllRecipes();
-    const fetched = getRecipeById(all[0].id);
-    expect(fetched).toEqual(all[0]);
+  it("getRecipeById returns undefined for an unknown id", async () => {
+    expect(
+      await getRecipeById("00000000-0000-0000-0000-000000000000")
+    ).toBeUndefined();
   });
 
-  it("getRecipeById returns undefined for unknown id", () => {
-    expect(getRecipeById("does-not-exist")).toBeUndefined();
+  it("getRecipeById returns a created recipe", async () => {
+    const created = await createRecipe("alice", samplePayload);
+    const fetched = await getRecipeById(created.id);
+    expect(fetched).toEqual(created);
   });
 
-  it("getRecipesByAuthor returns only that author's recipes", () => {
-    const created = createRecipe("alice", samplePayload);
-    const aliceRecipes = getRecipesByAuthor("alice");
+  it("getRecipesByAuthor returns only that author's recipes", async () => {
+    const created = await createRecipe("alice", samplePayload);
+    const aliceRecipes = await getRecipesByAuthor("alice");
     expect(aliceRecipes).toHaveLength(1);
     expect(aliceRecipes[0]).toEqual(created);
-    // seed user's recipes are unaffected
-    expect(getRecipesByAuthor("seed-test-user").length).toBeGreaterThan(0);
+    expect(await getRecipesByAuthor("bob")).toEqual([]);
   });
 
-  it("getRecipesByAuthor returns [] for unknown author", () => {
-    expect(getRecipesByAuthor("nobody")).toEqual([]);
+  it("getRecipesByAuthor returns [] for unknown author", async () => {
+    expect(await getRecipesByAuthor("nobody")).toEqual([]);
   });
 
-  it("createRecipe assigns id, authorId, createdAt, and trims fields", () => {
-    const created = createRecipe("bob", { ...samplePayload, title: "  Eggs  " });
-    expect(created.id).toMatch(/[0-9a-f-]{36}/);
+  it("createRecipe assigns id, authorId, createdAt, and trims fields", async () => {
+    const created = await createRecipe("bob", { ...samplePayload, title: "  Eggs  " });
+    expect(created.id).toMatch(/^[0-9a-f-]{36}$/);
     expect(created.authorId).toBe("bob");
     expect(created.title).toBe("Eggs");
     expect(typeof created.createdAt).toBe("string");
-    expect(getRecipeById(created.id)).toEqual(created);
+    expect(await getRecipeById(created.id)).toEqual(created);
   });
 
-  it("updateRecipe replaces fields but preserves id, authorId, createdAt", () => {
-    const created = createRecipe("bob", samplePayload);
-    const updated = updateRecipe(created.id, {
+  it("updateRecipe replaces fields but preserves id, authorId, createdAt", async () => {
+    const created = await createRecipe("bob", samplePayload);
+    const updated = await updateRecipe(created.id, {
       ...samplePayload,
       title: "Different",
       servings: 4,
@@ -77,17 +74,21 @@ describe("recipes store", () => {
     expect(updated?.servings).toBe(4);
   });
 
-  it("updateRecipe returns null for unknown id", () => {
-    expect(updateRecipe("does-not-exist", samplePayload)).toBeNull();
+  it("updateRecipe returns null for an unknown id", async () => {
+    expect(
+      await updateRecipe("00000000-0000-0000-0000-000000000000", samplePayload)
+    ).toBeNull();
   });
 
-  it("deleteRecipe removes the recipe and returns true", () => {
-    const created = createRecipe("carol", samplePayload);
-    expect(deleteRecipe(created.id)).toBe(true);
-    expect(getRecipeById(created.id)).toBeUndefined();
+  it("deleteRecipe removes the recipe and returns true", async () => {
+    const created = await createRecipe("carol", samplePayload);
+    expect(await deleteRecipe(created.id)).toBe(true);
+    expect(await getRecipeById(created.id)).toBeUndefined();
   });
 
-  it("deleteRecipe returns false for unknown id", () => {
-    expect(deleteRecipe("does-not-exist")).toBe(false);
+  it("deleteRecipe returns false for an unknown id", async () => {
+    expect(
+      await deleteRecipe("00000000-0000-0000-0000-000000000000")
+    ).toBe(false);
   });
 });

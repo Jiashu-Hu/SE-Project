@@ -1,101 +1,155 @@
 import { randomUUID } from "node:crypto";
-import { MOCK_RECIPES } from "@/data/mock-recipes";
-import type { CreateRecipePayload, Recipe } from "@/types/recipe";
+import { getDb } from "@/lib/db";
+import type { QueryRow } from "@/lib/db";
+import type {
+  CreateRecipePayload,
+  Recipe,
+  RecipeCategory,
+} from "@/types/recipe";
 
 export type UpdateRecipePayload = Partial<CreateRecipePayload>;
 
-const SEED_AUTHOR_ID = "seed-test-user";
-
-interface RecipeStore {
-  readonly recipesById: Map<string, Recipe>;
+interface RecipeRow extends QueryRow {
+  id: string;
+  author_id: string;
+  title: string;
+  description: string;
+  category: RecipeCategory;
+  prep_time: number;
+  cook_time: number;
+  servings: number;
+  image_url: string | null;
+  ingredients: Recipe["ingredients"];
+  instructions: Recipe["instructions"];
+  tags: Recipe["tags"];
+  created_at: string | Date;
 }
 
-const globalForRecipes = globalThis as typeof globalThis & {
-  recipeStore?: RecipeStore;
-};
-
-function getRecipeStore(): RecipeStore {
-  if (!globalForRecipes.recipeStore) {
-    const recipesById = new Map<string, Recipe>();
-
-    for (const recipe of MOCK_RECIPES) {
-      const seeded: Recipe = { ...recipe, authorId: SEED_AUTHOR_ID };
-      recipesById.set(seeded.id, seeded);
-    }
-
-    globalForRecipes.recipeStore = { recipesById };
-  }
-
-  return globalForRecipes.recipeStore;
+function toRecipe(row: RecipeRow): Recipe {
+  return {
+    id: row.id,
+    authorId: row.author_id,
+    title: row.title,
+    description: row.description,
+    category: row.category,
+    prepTime: row.prep_time,
+    cookTime: row.cook_time,
+    servings: row.servings,
+    imageUrl: row.image_url,
+    ingredients: row.ingredients,
+    instructions: row.instructions,
+    tags: row.tags,
+    createdAt:
+      typeof row.created_at === "string"
+        ? row.created_at
+        : row.created_at.toISOString(),
+  };
 }
 
-export function getAllRecipes(): readonly Recipe[] {
-  return Array.from(getRecipeStore().recipesById.values());
-}
+const SELECT_COLUMNS =
+  "id, author_id, title, description, category, prep_time, cook_time, servings, image_url, ingredients, instructions, tags, created_at";
 
-export function getRecipesByAuthor(authorId: string): readonly Recipe[] {
-  return Array.from(getRecipeStore().recipesById.values()).filter(
-    (recipe) => recipe.authorId === authorId
+export async function getAllRecipes(): Promise<readonly Recipe[]> {
+  const db = getDb();
+  const result = await db.query<RecipeRow>(
+    `select ${SELECT_COLUMNS} from recipes order by created_at desc`
   );
+  return result.rows.map(toRecipe);
 }
 
-export function getRecipeById(id: string): Recipe | undefined {
-  return getRecipeStore().recipesById.get(id);
+export async function getRecipeById(id: string): Promise<Recipe | undefined> {
+  const db = getDb();
+  const result = await db.query<RecipeRow>(
+    `select ${SELECT_COLUMNS} from recipes where id = $1 limit 1`,
+    [id]
+  );
+  const row = result.rows[0];
+  return row ? toRecipe(row) : undefined;
 }
 
-export function createRecipe(
+export async function getRecipesByAuthor(
+  authorId: string
+): Promise<readonly Recipe[]> {
+  const db = getDb();
+  const result = await db.query<RecipeRow>(
+    `select ${SELECT_COLUMNS} from recipes
+       where author_id = $1
+       order by created_at desc`,
+    [authorId]
+  );
+  return result.rows.map(toRecipe);
+}
+
+export async function createRecipe(
   authorId: string,
   payload: CreateRecipePayload
-): Recipe {
-  const now = new Date().toISOString();
-  const recipe: Recipe = {
-    id: randomUUID(),
-    authorId,
-    title: payload.title.trim(),
-    description: payload.description.trim(),
-    category: payload.category,
-    prepTime: payload.prepTime,
-    cookTime: payload.cookTime,
-    servings: payload.servings,
-    imageUrl: null,
-    ingredients: payload.ingredients,
-    instructions: payload.instructions,
-    tags: payload.tags,
-    createdAt: now,
-  };
-
-  getRecipeStore().recipesById.set(recipe.id, recipe);
-  return recipe;
+): Promise<Recipe> {
+  const db = getDb();
+  const id = randomUUID();
+  const result = await db.query<RecipeRow>(
+    `insert into recipes
+       (id, author_id, title, description, category,
+        prep_time, cook_time, servings,
+        ingredients, instructions, tags)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11::jsonb)
+     returning ${SELECT_COLUMNS}`,
+    [
+      id,
+      authorId,
+      payload.title.trim(),
+      payload.description.trim(),
+      payload.category,
+      payload.prepTime,
+      payload.cookTime,
+      payload.servings,
+      JSON.stringify(payload.ingredients),
+      JSON.stringify(payload.instructions),
+      JSON.stringify(payload.tags),
+    ]
+  );
+  return toRecipe(result.rows[0]);
 }
 
-export function updateRecipe(
+export async function updateRecipe(
   id: string,
   payload: CreateRecipePayload
-): Recipe | null {
-  const store = getRecipeStore();
-  const existing = store.recipesById.get(id);
-
-  if (!existing) {
-    return null;
-  }
-
-  const updated: Recipe = {
-    ...existing,
-    title: payload.title.trim(),
-    description: payload.description.trim(),
-    category: payload.category,
-    prepTime: payload.prepTime,
-    cookTime: payload.cookTime,
-    servings: payload.servings,
-    ingredients: payload.ingredients,
-    instructions: payload.instructions,
-    tags: payload.tags,
-  };
-
-  store.recipesById.set(id, updated);
-  return updated;
+): Promise<Recipe | null> {
+  const db = getDb();
+  const result = await db.query<RecipeRow>(
+    `update recipes
+        set title = $1,
+            description = $2,
+            category = $3,
+            prep_time = $4,
+            cook_time = $5,
+            servings = $6,
+            ingredients = $7::jsonb,
+            instructions = $8::jsonb,
+            tags = $9::jsonb
+      where id = $10
+      returning ${SELECT_COLUMNS}`,
+    [
+      payload.title.trim(),
+      payload.description.trim(),
+      payload.category,
+      payload.prepTime,
+      payload.cookTime,
+      payload.servings,
+      JSON.stringify(payload.ingredients),
+      JSON.stringify(payload.instructions),
+      JSON.stringify(payload.tags),
+      id,
+    ]
+  );
+  const row = result.rows[0];
+  return row ? toRecipe(row) : null;
 }
 
-export function deleteRecipe(id: string): boolean {
-  return getRecipeStore().recipesById.delete(id);
+export async function deleteRecipe(id: string): Promise<boolean> {
+  const db = getDb();
+  const result = await db.query(
+    `delete from recipes where id = $1`,
+    [id]
+  );
+  return result.rowCount > 0;
 }
