@@ -1,6 +1,6 @@
 "use client";
 
-import type { MealType } from "@/lib/meal-plan";
+import type { MealType } from "@/lib/meal-plan-types";
 
 const LABELS: Record<MealType, string> = {
   morning: "Morning",

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import type { MealPlanSlot, MealType } from "@/lib/meal-plan";
+import type { MealPlanSlot, MealType } from "@/lib/meal-plan-types";
 import type { Recipe } from "@/types/recipe";
 import { WeekNav } from "@/components/meal-plan/WeekNav";
 import { DayColumn } from "@/components/meal-plan/DayColumn";

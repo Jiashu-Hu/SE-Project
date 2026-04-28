@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import type { MealPlanSlot, MealType } from "@/lib/meal-plan";
+import type { MealPlanSlot, MealType } from "@/lib/meal-plan-types";
 import type { Recipe } from "@/types/recipe";
 
 const LABELS: Record<MealType, string> = {

@@ -1,20 +1,13 @@
 import { getDb } from "@/lib/db";
 import type { QueryRow } from "@/lib/db";
 import { sundayOf } from "@/lib/week";
+// Re-export pure types/constants. The actual definitions live in
+// meal-plan-types.ts so client components can import them without
+// pulling pg/Node-only code into the browser bundle.
+export type { MealType, MealPlanSlot } from "@/lib/meal-plan-types";
+export { MEAL_TYPES } from "@/lib/meal-plan-types";
 
-export type MealType = "morning" | "noon" | "evening";
-
-export const MEAL_TYPES: readonly MealType[] = ["morning", "noon", "evening"];
-
-export interface MealPlanSlot {
-  readonly id: string;
-  readonly userId: string;
-  readonly date: string;
-  readonly mealType: MealType;
-  readonly recipeId: string;
-  readonly servings: number;
-  readonly createdAt: string;
-}
+import type { MealType, MealPlanSlot } from "@/lib/meal-plan-types";
 
 interface SlotRow extends QueryRow {
   id: string;

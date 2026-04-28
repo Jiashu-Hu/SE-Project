@@ -1,7 +1,7 @@
 "use client";
 
-import type { MealPlanSlot, MealType } from "@/lib/meal-plan";
-import { MEAL_TYPES } from "@/lib/meal-plan";
+import type { MealPlanSlot, MealType } from "@/lib/meal-plan-types";
+import { MEAL_TYPES } from "@/lib/meal-plan-types";
 import type { Recipe } from "@/types/recipe";
 import { EmptySlot } from "@/components/meal-plan/EmptySlot";
 import { MealSlotCard } from "@/components/meal-plan/MealSlotCard";
