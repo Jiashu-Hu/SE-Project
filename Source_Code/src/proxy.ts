@@ -9,7 +9,7 @@ const PUBLIC_ROUTES = new Set([
   "/reset-password",
 ]);
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   // Pass through Next.js internals and all API routes (handlers return their own errors)
