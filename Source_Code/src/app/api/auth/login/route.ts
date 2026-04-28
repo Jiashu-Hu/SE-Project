@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Password is required." }, { status: 400 });
   }
 
-  const user = authenticateUser(payload.email, payload.password);
+  const user = await authenticateUser(payload.email, payload.password);
   if (!user) {
     return NextResponse.json(
       { error: "Invalid email or password." },
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const session = createSession(user.id);
+  const session = await createSession(user.id);
 
   const response = NextResponse.json({ user });
   response.cookies.set({
