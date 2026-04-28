@@ -173,3 +173,27 @@ export async function generateRecipeFromText(
     { role: "user", content: text },
   ]);
 }
+
+const IMAGE_DATA_URL_RE = /^data:image\/(?:jpeg|png|gif|webp);base64,(.+)$/;
+
+export async function generateRecipeFromImage(
+  dataUrl: string
+): Promise<CreateRecipePayload> {
+  if (!IMAGE_DATA_URL_RE.test(dataUrl)) {
+    throw new Error("Invalid image data URL");
+  }
+
+  return generateWithRetry([
+    { role: "system", content: SYSTEM_PROMPT },
+    {
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: dataUrl } },
+        {
+          type: "text",
+          text: "Generate a recipe based on the ingredients or food shown in this image.",
+        },
+      ],
+    },
+  ]);
+}

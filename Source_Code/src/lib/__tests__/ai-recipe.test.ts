@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from "vitest";
 import {
   generateRecipeFromText,
+  generateRecipeFromImage,
   __setTestClient,
   __resetClient,
 } from "@/lib/ai-recipe";
@@ -113,5 +114,34 @@ describe("generateRecipeFromText", () => {
     const recipe = await generateRecipeFromText("chicken");
     const aiTagCount = recipe.tags.filter((t) => t === "ai-generated").length;
     expect(aiTagCount).toBe(1);
+  });
+});
+
+describe("generateRecipeFromImage", () => {
+  it("returns a validated payload for a JPEG data URL", async () => {
+    __setTestClient(makeFakeClient([makeChatResponse(VALID_RECIPE)]));
+
+    const recipe = await generateRecipeFromImage(
+      "data:image/jpeg;base64,/9j/4AAQSkZJRg=="
+    );
+
+    expect(recipe.title).toBe("Pasta Aglio e Olio");
+    expect(recipe.tags).toContain("ai-generated");
+  });
+
+  it("rejects a non-data-URL string", async () => {
+    __setTestClient(makeFakeClient([])); // shouldn't reach the client
+
+    await expect(
+      generateRecipeFromImage("just-a-plain-string")
+    ).rejects.toThrow(/Invalid image data URL/);
+  });
+
+  it("rejects a data URL with an unsupported media type", async () => {
+    __setTestClient(makeFakeClient([]));
+
+    await expect(
+      generateRecipeFromImage("data:application/pdf;base64,abc")
+    ).rejects.toThrow(/Invalid image data URL/);
   });
 });
