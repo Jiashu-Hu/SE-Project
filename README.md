@@ -4,6 +4,8 @@ A web application for personal recipe organization. Users register, log in,
 and manage their own recipes — create, edit, search, filter by category, and
 delete.
 
+**Live:** [se-project-jade-eight.vercel.app](https://se-project-jade-eight.vercel.app/) (test account: `test@test.com` / `test`)
+
 Built with Next.js 16, React 19, TypeScript, and Tailwind CSS 4. Recipes,
 users, sessions, and password reset tokens are all persisted to Postgres
 (Supabase). The app holds no user state in process memory.
