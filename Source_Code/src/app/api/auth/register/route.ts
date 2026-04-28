@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: passwordCheck.error }, { status: 400 });
   }
 
-  const result = registerUser({
+  const result = await registerUser({
     name: payload.name,
     email: payload.email,
     password: payload.password,
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: result.error }, { status: 409 });
   }
 
-  const session = createSession(result.user.id);
+  const session = await createSession(result.user.id);
 
   const response = NextResponse.json({ user: result.user }, { status: 201 });
   response.cookies.set({
