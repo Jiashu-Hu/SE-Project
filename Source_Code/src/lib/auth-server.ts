@@ -11,5 +11,5 @@ export async function getCurrentUserFromCookies(): Promise<AuthUser | null> {
     return null;
   }
 
-  return getUserBySessionToken(token);
+  return await getUserBySessionToken(token);
 }
