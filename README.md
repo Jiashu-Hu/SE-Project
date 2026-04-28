@@ -4,15 +4,17 @@ A web application for personal recipe organization. Users register, log in,
 and manage their own recipes — create, edit, search, filter by category, and
 delete.
 
-Built with Next.js 16, React 19, TypeScript, and Tailwind CSS 4. Recipes are
-persisted to Postgres (Supabase). Auth (users, sessions, reset tokens) is
-still in-memory and migrates in a follow-up phase.
+Built with Next.js 16, React 19, TypeScript, and Tailwind CSS 4. Recipes,
+users, sessions, and password reset tokens are all persisted to Postgres
+(Supabase). The app holds no user state in process memory.
 
 ## Quick start
 
 ```bash
 cd Source_Code
 npm install
+# Configure Source_Code/.env.local with DATABASE_URL — see INSTALL.md
+npm run db:seed
 npm run dev
 ```
 
