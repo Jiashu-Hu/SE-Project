@@ -153,6 +153,8 @@ needs no configuration.
 
 #### Database setup (Supabase)
 
+> **Already on Phase 1?** Run `Source_Code/supabase/migrations/2026-04-27-phase-2-auth.sql` in the SQL Editor instead of `schema.sql`. The migration adds the auth tables without re-creating the `recipes` table (though it does truncate it — see the file's header comment).
+
 1. Create a free Supabase project at https://supabase.com.
 2. In your project dashboard: **SQL Editor → New query**, paste the
    contents of `Source_Code/supabase/schema.sql`, and run it.
@@ -161,7 +163,16 @@ needs no configuration.
    Vercel deployments) or the direct URI (for local dev).
 4. Copy `Source_Code/.env.local.example` to `Source_Code/.env.local` and
    fill in `DATABASE_URL`.
-5. Verify the connection:
+5. Seed the dev user:
+
+   ```bash
+   cd Source_Code
+   npm run db:seed
+   ```
+
+   The seed script is idempotent — you can run it repeatedly without
+   creating duplicate users.
+6. Verify the connection:
 
    ```bash
    cd Source_Code
@@ -171,10 +182,12 @@ needs no configuration.
    Then sign in (test@test.com / test) and create a recipe. Restart
    `npm run dev` — the recipe should still be there.
 
-#### Mock User Credentials (still in-memory)
+#### Mock User Credentials
 
 - Email: `test@test.com`
 - Password: `test`
+
+Created by `npm run db:seed`.
 
 #### Session Duration
 
