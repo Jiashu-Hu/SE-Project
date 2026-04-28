@@ -14,6 +14,8 @@ interface IngredientRow {
 export interface RecipeFormProps {
   /** When provided the form PATCHes the existing recipe instead of POSTing a new one. */
   readonly existingRecipe?: Recipe;
+  /** Initial values for the create flow. Ignored when existingRecipe is set. */
+  readonly defaults?: CreateRecipePayload;
 }
 
 const RECIPE_CATEGORIES = CATEGORIES.filter((c) => c !== "All") as RecipeCategory[];
@@ -57,23 +59,34 @@ function buildPayload(
   };
 }
 
-export function RecipeForm({ existingRecipe }: RecipeFormProps) {
+export function RecipeForm({ existingRecipe, defaults }: RecipeFormProps) {
   const router = useRouter();
   const isEditing = existingRecipe !== undefined;
+  const initial = existingRecipe ?? defaults;
 
-  const [title, setTitle] = useState(existingRecipe?.title ?? "");
-  const [description, setDescription] = useState(existingRecipe?.description ?? "");
-  const [category, setCategory] = useState<RecipeCategory>(existingRecipe?.category ?? "Dinner");
-  const [prepTime, setPrepTime] = useState(existingRecipe ? String(existingRecipe.prepTime) : "");
-  const [cookTime, setCookTime] = useState(existingRecipe ? String(existingRecipe.cookTime) : "");
-  const [servings, setServings] = useState(existingRecipe ? String(existingRecipe.servings) : "");
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [category, setCategory] = useState<RecipeCategory>(
+    initial?.category ?? "Dinner"
+  );
+  const [prepTime, setPrepTime] = useState(
+    initial ? String(initial.prepTime) : ""
+  );
+  const [cookTime, setCookTime] = useState(
+    initial ? String(initial.cookTime) : ""
+  );
+  const [servings, setServings] = useState(
+    initial ? String(initial.servings) : ""
+  );
   const [ingredients, setIngredients] = useState<readonly IngredientRow[]>(
-    existingRecipe ? toRows(existingRecipe.ingredients) : [EMPTY_INGREDIENT]
+    initial ? toRows(initial.ingredients) : [EMPTY_INGREDIENT]
   );
   const [instructions, setInstructions] = useState<readonly string[]>(
-    existingRecipe?.instructions.length ? existingRecipe.instructions : [""]
+    initial?.instructions.length ? initial.instructions : [""]
   );
-  const [tagsRaw, setTagsRaw] = useState(existingRecipe?.tags.join(", ") ?? "");
+  const [tagsRaw, setTagsRaw] = useState(
+    initial?.tags.length ? initial.tags.join(", ") : ""
+  );
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
