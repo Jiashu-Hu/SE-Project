@@ -119,4 +119,58 @@ describe("bulkUpdateServings", () => {
     const week2 = await listSlotsForWeek(userId, "2026-05-04");
     expect(week2.every((s) => s.servings === 1)).toBe(true);
   });
+
+  it("returns 0 when servings is not a positive integer", async () => {
+    const { userId } = await makeUserAndRecipe();
+    expect(await bulkUpdateServings(userId, "2026-04-27", 0)).toBe(0);
+    expect(await bulkUpdateServings(userId, "2026-04-27", -1)).toBe(0);
+  });
+
+  it("returns 0 for a malformed userId", async () => {
+    expect(await bulkUpdateServings("not-a-uuid", "2026-04-27", 4)).toBe(0);
+  });
+});
+
+describe("updateSlot defensive guards", () => {
+  it("returns null when no fields are provided", async () => {
+    const { userId } = await makeUserAndRecipe();
+    const result = await updateSlot({
+      slotId: "00000000-0000-0000-0000-000000000000",
+      userId,
+    });
+    expect(result).toBeNull();
+  });
+
+  it("returns null for a malformed slotId", async () => {
+    const { userId } = await makeUserAndRecipe();
+    const result = await updateSlot({
+      slotId: "not-a-uuid",
+      userId,
+      servings: 4,
+    });
+    expect(result).toBeNull();
+  });
+
+  it("returns null for a malformed recipeId override", async () => {
+    const { userId } = await makeUserAndRecipe();
+    const result = await updateSlot({
+      slotId: "00000000-0000-0000-0000-000000000000",
+      userId,
+      recipeId: "not-a-uuid",
+    });
+    expect(result).toBeNull();
+  });
+});
+
+describe("listSlotsForWeek + deleteSlot defensive guards", () => {
+  it("listSlotsForWeek returns [] for a malformed userId", async () => {
+    const slots = await listSlotsForWeek("not-a-uuid", "2026-04-27");
+    expect(slots).toEqual([]);
+  });
+
+  it("deleteSlot returns false for malformed ids", async () => {
+    expect(
+      await deleteSlot("not-a-uuid", "00000000-0000-0000-0000-000000000000")
+    ).toBe(false);
+  });
 });

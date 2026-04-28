@@ -150,4 +150,33 @@ describe("aggregateIngredients", () => {
     expect(items[0].item).toBe("Flour");
     expect(items[0].unit).toBe("Cup");
   });
+
+  it("skips ingredients with empty item names", () => {
+    const recipe = makeRecipe({
+      servings: 1,
+      ingredients: [
+        { amount: "1", unit: "cup", item: "" },
+        { amount: "1", unit: "cup", item: "flour" },
+      ],
+    });
+    const items = aggregateIngredients([{ servings: 1, recipe }]);
+    expect(items).toHaveLength(1);
+    expect(items[0].item).toBe("flour");
+  });
+
+  it("treats recipe.servings of 0 as ratio 1 to avoid division by zero", () => {
+    const recipe = makeRecipe({
+      servings: 0,
+      ingredients: [{ amount: "10", unit: "g", item: "salt" }],
+    });
+    const items = aggregateIngredients([{ servings: 5, recipe }]);
+    expect(items[0].amount).toBe("10");
+  });
+});
+
+describe("parseAmount edge cases", () => {
+  it("returns null for division by zero in fractions", () => {
+    expect(parseAmount("1/0")).toBeNull();
+    expect(parseAmount("1 1/0")).toBeNull();
+  });
 });
