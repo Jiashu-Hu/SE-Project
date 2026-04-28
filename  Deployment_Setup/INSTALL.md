@@ -361,39 +361,49 @@ This starts the production server on `http://localhost:3000`.
 
 #### 1. Vercel (Recommended)
 
-Vercel is the official hosting platform for Next.js applications.
+Vercel auto-builds Next.js apps from a GitHub repository on every push to
+the deploy branch.
 
-**Deployment Steps:**
+**One-time setup (UI):**
 
-1. **Install Vercel CLI:**
-   ```bash
-   npm install -g vercel
-   ```
+1. Sign in to [vercel.com](https://vercel.com) with the same GitHub account
+   that owns the repository.
+2. **Add New... → Project → Import** the GitHub repo.
+3. **Project settings:**
+   - **Framework Preset:** Next.js (auto-detected)
+   - **Root Directory:** `Source_Code` *(critical — package.json is in this
+     subdirectory, not the repo root)*
+   - **Build & Output Settings:** leave defaults
+4. **Environment Variables:** add `DATABASE_URL` (the Supabase Session pooler
+   URI from `Source_Code/.env.local`). Apply to Production, Preview, and
+   Development.
+5. Click **Deploy**.
 
-2. **Login to Vercel:**
-   ```bash
-   vercel login
-   ```
+**After the first deploy:**
 
-3. **Deploy:**
-   ```bash
-   vercel
-   ```
+- The app is live at `https://<project-name>.vercel.app` (or any custom
+  domain configured in Vercel).
+- Every push to the deploy branch triggers a new production deploy.
+- Pull requests get automatic preview deploys at unique URLs.
 
-4. **Deploy to Production:**
-   ```bash
-   vercel --prod
-   ```
+**Verification:**
 
-**Configuration:**
-- Framework Preset: `Next.js`
-- Build Command: `npm run build`
-- Output Directory: `.next`
-- Install Command: `npm install`
-- Node Version: `20.x`
+```bash
+DEPLOY_URL=https://your-project.vercel.app
+curl -sS $DEPLOY_URL/api/auth/me
+# Expected: {"user":null}  (200 OK with no session cookie)
+```
 
-**Environment Variables:**
-Add any custom environment variables in the Vercel dashboard.
+Then log in via the browser with `test@test.com` / `test` and create a
+recipe to confirm end-to-end functionality.
+
+**Known limitation:**
+
+The forgot-password flow currently requires email delivery to send the
+reset token, which is not implemented. In production, the
+`/api/auth/forgot-password` endpoint returns `{ ok: true }` regardless,
+without leaking the token — a deliberate security gate. Adding email
+delivery (e.g., Resend, Mailgun, AWS SES) is a future task.
 
 #### 2. Docker Deployment
 
