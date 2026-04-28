@@ -78,6 +78,14 @@ export function Header({ searchQuery, onSearchChange, userName }: HeaderProps) {
           />
         </div>
 
+        {/* Meal Plan link */}
+        <Link
+          href="/meal-plan"
+          className="shrink-0 text-sm font-medium text-zinc-700 hover:text-orange-600 dark:text-zinc-300 dark:hover:text-orange-400"
+        >
+          Meal Plan
+        </Link>
+
         {/* Add Recipe Button */}
         <Link
           href="/recipes/new"
