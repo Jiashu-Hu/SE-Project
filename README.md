@@ -1,8 +1,8 @@
 # Recipe Management System
 
 A web application for personal recipe organization. Users register, log in,
-and manage their own recipes — create, edit, search, filter by category, and
-delete.
+and manage their own recipes — create (manually or via AI from a description
+or photo), edit, search, filter by category, and delete.
 
 **Live:** [se-project-jade-eight.vercel.app](https://se-project-jade-eight.vercel.app/) (test account: `test@test.com` / `test`)
 

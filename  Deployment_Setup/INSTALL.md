@@ -182,6 +182,25 @@ needs no configuration.
    Then sign in (test@test.com / test) and create a recipe. Restart
    `npm run dev` — the recipe should still be there.
 
+### AI generator setup (GPTGOD)
+
+The AI recipe generator at `/recipes/generate` requires an API key from the
+GPTGOD gateway (an OpenAI-compatible service).
+
+1. Sign up at https://gptgod.online and create an API key.
+2. Add it to `Source_Code/.env.local`:
+
+   ```bash
+   GPTGOD_KEY=sk-...
+   ```
+
+3. For the Vercel deployment, add it under **Project Settings → Environment
+   Variables** for Production, Preview, and Development.
+
+The base URL (`https://api.gptgod.online/v1`) and model (`gpt-4.1-mini`) are
+hardcoded in `lib/ai-recipe.ts` — change them there if you want to swap
+providers.
+
 #### Mock User Credentials
 
 - Email: `test@test.com`
