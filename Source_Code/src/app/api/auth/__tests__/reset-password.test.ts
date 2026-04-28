@@ -16,8 +16,8 @@ function makeRequest(body: unknown): Request {
 
 describe("POST /api/auth/reset-password", () => {
   it("resets the password when given a valid token", async () => {
-    registerUser({ name: "A", email: "a@x.com", password: "Strong1Pass" });
-    const issued = createPasswordResetToken("a@x.com");
+    await registerUser({ name: "A", email: "a@x.com", password: "Strong1Pass" });
+    const issued = await createPasswordResetToken("a@x.com");
     if (!("token" in issued) || issued.token === "") {
       throw new Error("setup failed");
     }
@@ -27,7 +27,7 @@ describe("POST /api/auth/reset-password", () => {
       newPassword: "Different1Pass",
     }));
     expect(res.status).toBe(200);
-    expect(authenticateUser("a@x.com", "Different1Pass")?.email).toBe("a@x.com");
+    expect((await authenticateUser("a@x.com", "Different1Pass"))?.email).toBe("a@x.com");
   });
 
   it("rejects an unknown token", async () => {
@@ -39,8 +39,8 @@ describe("POST /api/auth/reset-password", () => {
   });
 
   it("rejects a weak new password", async () => {
-    registerUser({ name: "A", email: "a@x.com", password: "Strong1Pass" });
-    const issued = createPasswordResetToken("a@x.com");
+    await registerUser({ name: "A", email: "a@x.com", password: "Strong1Pass" });
+    const issued = await createPasswordResetToken("a@x.com");
     if (!("token" in issued) || issued.token === "") return;
 
     const res = await POST(makeRequest({

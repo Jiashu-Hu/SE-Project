@@ -16,7 +16,7 @@ afterEach(() => {
 
 describe("POST /api/auth/forgot-password", () => {
   it("returns 200 for a known email", async () => {
-    registerUser({ name: "A", email: "a@x.com", password: "Strong1Pass" });
+    await registerUser({ name: "A", email: "a@x.com", password: "Strong1Pass" });
     const res = await POST(makeRequest({ email: "a@x.com" }));
     expect(res.status).toBe(200);
   });
@@ -33,7 +33,7 @@ describe("POST /api/auth/forgot-password", () => {
 
   describe("token disclosure", () => {
     it("includes a devToken in the response when NODE_ENV is not production", async () => {
-      registerUser({ name: "A", email: "a@x.com", password: "Strong1Pass" });
+      await registerUser({ name: "A", email: "a@x.com", password: "Strong1Pass" });
       vi.stubEnv("NODE_ENV", "development");
 
       const res = await POST(makeRequest({ email: "a@x.com" }));
@@ -46,7 +46,7 @@ describe("POST /api/auth/forgot-password", () => {
     });
 
     it("never includes the token in the response when NODE_ENV is production", async () => {
-      registerUser({ name: "A", email: "a@x.com", password: "Strong1Pass" });
+      await registerUser({ name: "A", email: "a@x.com", password: "Strong1Pass" });
       vi.stubEnv("NODE_ENV", "production");
 
       const res = await POST(makeRequest({ email: "a@x.com" }));
@@ -57,7 +57,7 @@ describe("POST /api/auth/forgot-password", () => {
     });
 
     it("returns identical response shape for known and unknown emails in production", async () => {
-      registerUser({ name: "A", email: "a@x.com", password: "Strong1Pass" });
+      await registerUser({ name: "A", email: "a@x.com", password: "Strong1Pass" });
       vi.stubEnv("NODE_ENV", "production");
 
       const known = await POST(makeRequest({ email: "a@x.com" }));
