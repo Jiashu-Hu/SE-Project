@@ -81,3 +81,69 @@ describe("POST /api/meal-plan/slots", () => {
     expect(dup.status).toBe(409);
   });
 });
+
+import { PATCH, DELETE } from "@/app/api/meal-plan/slots/[id]/route";
+
+function paramsFor(id: string) {
+  return { params: Promise.resolve({ id }) };
+}
+
+describe("PATCH /api/meal-plan/slots/[id]", () => {
+  it("returns 401 when not logged in", async () => {
+    const req = new Request("http://localhost/api/meal-plan/slots/x", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ servings: 4 }),
+    });
+    const res = await PATCH(req, paramsFor("00000000-0000-0000-0000-000000000000"));
+    expect(res.status).toBe(401);
+  });
+
+  it("updates servings and returns the new slot", async () => {
+    const { recipeId } = await loginAndRecipe();
+    const create = await POST(makeReq({
+      date: "2026-04-27", mealType: "morning", recipeId, servings: 1,
+    }));
+    const created = (await create.json()).slot;
+
+    const patchReq = new Request("http://localhost/api/meal-plan/slots/x", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ servings: 5 }),
+    });
+    const res = await PATCH(patchReq, paramsFor(created.id));
+    expect(res.status).toBe(200);
+    expect((await res.json()).slot.servings).toBe(5);
+  });
+
+  it("returns 404 for an unknown slot id", async () => {
+    await loginAndRecipe();
+    const req = new Request("http://localhost/api/meal-plan/slots/x", {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ servings: 5 }),
+    });
+    const res = await PATCH(req, paramsFor("00000000-0000-0000-0000-000000000000"));
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("DELETE /api/meal-plan/slots/[id]", () => {
+  it("returns 204 on successful delete", async () => {
+    const { recipeId } = await loginAndRecipe();
+    const create = await POST(makeReq({
+      date: "2026-04-27", mealType: "morning", recipeId, servings: 1,
+    }));
+    const created = (await create.json()).slot;
+
+    const req = new Request(`http://localhost/api/meal-plan/slots/${created.id}`, {
+      method: "DELETE",
+    });
+    const res = await DELETE(req, paramsFor(created.id));
+    expect(res.status).toBe(204);
+  });
+
+  it("returns 404 for an unknown slot", async () => {
+    await loginAndRecipe();
+    const req = new Request("http://localhost/api/meal-plan/slots/x", { method: "DELETE" });
+    const res = await DELETE(req, paramsFor("00000000-0000-0000-0000-000000000000"));
+    expect(res.status).toBe(404);
+  });
+});
