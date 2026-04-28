@@ -1,9 +1,13 @@
-// Browser-only. Resizes an image File to longest-edge <= 1568 px and
-// re-encodes as JPEG quality 0.8. Returns a base64 data URL plus the
-// resulting byte size for UI display.
+// Browser-only. Resizes an image File and re-encodes as JPEG. Returns a
+// base64 data URL plus the resulting byte size for UI display.
+//
+// Empirically tuned for the GPTGOD vision gateway: 518 KB payloads time
+// out at ~215s, but 16 KB ones complete in ~8s. 768 px / quality 0.7
+// keeps phone photos in the 50-150 KB range and finishes in under 30s,
+// while still giving the model enough resolution to identify ingredients.
 
-const MAX_EDGE = 1568;
-const JPEG_QUALITY = 0.8;
+const MAX_EDGE = 768;
+const JPEG_QUALITY = 0.7;
 
 export interface CompressedImage {
   readonly dataUrl: string;
