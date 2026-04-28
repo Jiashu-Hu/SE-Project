@@ -27,6 +27,14 @@ export default defineConfig({
         "src/components/**",
         "src/middleware.ts",
         "src/data/**",
+        // Browser-only canvas API; Vitest runs in node and can't exercise
+        // createImageBitmap / canvas.toBlob. Exercised via manual smoke at
+        // /recipes/generate.
+        "src/lib/image-compress.ts",
+        // Production-only pg.Pool factory. The test seam injects a PGlite
+        // client via __setTestDb so the tests never hit buildPgClient.
+        // Manual smoke against real Supabase covers it.
+        "src/lib/db.ts",
       ],
       thresholds: {
         lines: 80,

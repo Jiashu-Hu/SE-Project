@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import {
   generateRecipeFromText,
   generateRecipeFromImage,
+  getOpenAI,
   __setTestClient,
   __resetClient,
 } from "@/lib/ai-recipe";
@@ -114,6 +115,71 @@ describe("generateRecipeFromText", () => {
     const recipe = await generateRecipeFromText("chicken");
     const aiTagCount = recipe.tags.filter((t) => t === "ai-generated").length;
     expect(aiTagCount).toBe(1);
+  });
+
+  describe("defensive error paths", () => {
+    function makeBadResponse(content: string | null) {
+      return {
+        id: "x",
+        object: "chat.completion",
+        created: 0,
+        model: "gpt-4.1-mini",
+        choices: [
+          {
+            index: 0,
+            finish_reason: "stop",
+            message: { role: "assistant", content, refusal: null },
+          },
+        ],
+        usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+      };
+    }
+
+    it("throws when the model returns empty content twice", async () => {
+      __setTestClient(
+        makeFakeClient([makeBadResponse(null), makeBadResponse(null)])
+      );
+      await expect(generateRecipeFromText("x")).rejects.toThrow(
+        /Empty response/
+      );
+    });
+
+    it("throws when the model returns non-JSON content twice", async () => {
+      __setTestClient(
+        makeFakeClient([
+          makeBadResponse("not json at all"),
+          makeBadResponse("still not json"),
+        ])
+      );
+      await expect(generateRecipeFromText("x")).rejects.toThrow(
+        /non-JSON content/
+      );
+    });
+
+    it("throws when the model returns JSON null twice (not an object)", async () => {
+      __setTestClient(
+        makeFakeClient([
+          makeBadResponse("null"),
+          makeBadResponse("null"),
+        ])
+      );
+      await expect(generateRecipeFromText("x")).rejects.toThrow(
+        /not a JSON object/
+      );
+    });
+  });
+});
+
+describe("getOpenAI", () => {
+  it("throws when GPTGOD_KEY is not set", () => {
+    __resetClient();
+    const original = process.env.GPTGOD_KEY;
+    delete process.env.GPTGOD_KEY;
+    try {
+      expect(() => getOpenAI()).toThrow(/GPTGOD_KEY is required/);
+    } finally {
+      if (original !== undefined) process.env.GPTGOD_KEY = original;
+    }
   });
 });
 
