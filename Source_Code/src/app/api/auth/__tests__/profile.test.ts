@@ -22,10 +22,10 @@ function makeRequest(body: unknown): Request {
   });
 }
 
-function logIn(email: string): void {
-  const reg = registerUser({ name: "User", email, password: "Strong1Pass" });
+async function logIn(email: string): Promise<void> {
+  const reg = await registerUser({ name: "User", email, password: "Strong1Pass" });
   if (!("user" in reg)) throw new Error("setup failed");
-  const session = createSession(reg.user.id);
+  const session = await createSession(reg.user.id);
   cookieJar.set(AUTH_SESSION_COOKIE, session.token);
 }
 
@@ -38,7 +38,7 @@ describe("profile update endpoint", () => {
   });
 
   it("updates name and email when logged in", async () => {
-    logIn("a@x.com");
+    await logIn("a@x.com");
     const res = await handler(makeRequest({ name: "New Name", email: "new@x.com" }));
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -47,8 +47,8 @@ describe("profile update endpoint", () => {
   });
 
   it("rejects taking another user's email", async () => {
-    registerUser({ name: "Other", email: "taken@x.com", password: "Strong1Pass" });
-    logIn("me@x.com");
+    await registerUser({ name: "Other", email: "taken@x.com", password: "Strong1Pass" });
+    await logIn("me@x.com");
     const res = await handler(makeRequest({ name: "Me", email: "taken@x.com" }));
     expect([400, 409]).toContain(res.status);
   });
