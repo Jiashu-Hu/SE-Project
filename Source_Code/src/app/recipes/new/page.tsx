@@ -35,6 +35,21 @@ export default async function NewRecipePage() {
           </Link>
         </div>
 
+        <Link
+          href="/recipes/generate"
+          className="mb-6 flex items-center justify-between rounded-2xl border border-orange-200 bg-orange-50/60 px-5 py-4 transition-colors hover:bg-orange-100/60 dark:border-orange-900/40 dark:bg-orange-950/30 dark:hover:bg-orange-950/50"
+        >
+          <div>
+            <p className="text-sm font-semibold text-orange-700 dark:text-orange-400">
+              ✨ Generate with AI
+            </p>
+            <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">
+              Describe what you have or upload a photo — AI will fill the form for you.
+            </p>
+          </div>
+          <span className="text-orange-600 dark:text-orange-400">→</span>
+        </Link>
+
         <RecipeForm />
       </main>
     </div>
