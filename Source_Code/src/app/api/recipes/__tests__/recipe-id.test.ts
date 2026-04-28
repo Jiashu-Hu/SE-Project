@@ -30,10 +30,10 @@ const samplePayload: CreateRecipePayload = {
   tags: [],
 };
 
-function logInAs(email: string): string {
-  const reg = registerUser({ name: "U", email, password: "Strong1Pass" });
+async function logInAs(email: string): Promise<string> {
+  const reg = await registerUser({ name: "U", email, password: "Strong1Pass" });
   if (!("user" in reg)) throw new Error("setup failed");
-  cookieJar.set(AUTH_SESSION_COOKIE, createSession(reg.user.id).token);
+  cookieJar.set(AUTH_SESSION_COOKIE, (await createSession(reg.user.id)).token);
   return reg.user.id;
 }
 
@@ -58,23 +58,23 @@ describe("PATCH /api/recipes/[id]", () => {
   });
 
   it("returns 404 for an unknown recipe id", async () => {
-    logInAs("a@x.com");
+    await logInAs("a@x.com");
     const res = await PATCH(patchRequest(samplePayload), paramsFor("00000000-0000-0000-0000-000000000000"));
     expect(res.status).toBe(404);
   });
 
   it("returns 403 when editing another user's recipe", async () => {
-    const aliceId = logInAs("alice@x.com");
+    const aliceId = await logInAs("alice@x.com");
     const recipe = await createRecipe(aliceId, samplePayload);
     cookieJar.clear();
-    logInAs("bob@x.com");
+    await logInAs("bob@x.com");
 
     const res = await PATCH(patchRequest({ ...samplePayload, title: "Hacked" }), paramsFor(recipe.id));
     expect(res.status).toBe(403);
   });
 
   it("updates a recipe owned by the logged-in user", async () => {
-    const userId = logInAs("a@x.com");
+    const userId = await logInAs("a@x.com");
     const recipe = await createRecipe(userId, samplePayload);
 
     const res = await PATCH(
@@ -88,7 +88,7 @@ describe("PATCH /api/recipes/[id]", () => {
   });
 
   it("rejects an invalid payload with 400", async () => {
-    const userId = logInAs("a@x.com");
+    const userId = await logInAs("a@x.com");
     const recipe = await createRecipe(userId, samplePayload);
     const res = await PATCH(patchRequest({ ...samplePayload, title: "" }), paramsFor(recipe.id));
     expect(res.status).toBe(400);
@@ -106,23 +106,23 @@ describe("DELETE /api/recipes/[id]", () => {
   });
 
   it("returns 404 for an unknown id", async () => {
-    logInAs("a@x.com");
+    await logInAs("a@x.com");
     const res = await DELETE(deleteRequest(), paramsFor("00000000-0000-0000-0000-000000000000"));
     expect(res.status).toBe(404);
   });
 
   it("returns 403 when deleting another user's recipe", async () => {
-    const aliceId = logInAs("alice@x.com");
+    const aliceId = await logInAs("alice@x.com");
     const recipe = await createRecipe(aliceId, samplePayload);
     cookieJar.clear();
-    logInAs("bob@x.com");
+    await logInAs("bob@x.com");
 
     const res = await DELETE(deleteRequest(), paramsFor(recipe.id));
     expect(res.status).toBe(403);
   });
 
   it("returns 204 and removes the recipe when the owner deletes it", async () => {
-    const userId = logInAs("a@x.com");
+    const userId = await logInAs("a@x.com");
     const recipe = await createRecipe(userId, samplePayload);
 
     const res = await DELETE(deleteRequest(), paramsFor(recipe.id));

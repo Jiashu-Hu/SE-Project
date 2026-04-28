@@ -33,12 +33,12 @@ function makeRequest(body: unknown): Request {
   });
 }
 
-function logIn(): string {
-  const reg = registerUser({
+async function logIn(): Promise<string> {
+  const reg = await registerUser({
     name: "Chef", email: "chef@x.com", password: "Strong1Pass",
   });
   if (!("user" in reg)) throw new Error("setup failed");
-  const session = createSession(reg.user.id);
+  const session = await createSession(reg.user.id);
   cookieJar.set(AUTH_SESSION_COOKIE, session.token);
   return reg.user.id;
 }
@@ -52,7 +52,7 @@ describe("POST /api/recipes", () => {
   });
 
   it("creates a recipe owned by the logged-in user", async () => {
-    const userId = logIn();
+    const userId = await logIn();
     const res = await POST(makeRequest(validBody));
     expect(res.status).toBe(201);
     const body = await res.json();
@@ -61,13 +61,13 @@ describe("POST /api/recipes", () => {
   });
 
   it("rejects an invalid payload with 400", async () => {
-    logIn();
+    await logIn();
     const res = await POST(makeRequest({ ...validBody, title: "" }));
     expect(res.status).toBe(400);
   });
 
   it("rejects malformed JSON with 400", async () => {
-    logIn();
+    await logIn();
     const req = new Request("http://localhost/api/recipes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
