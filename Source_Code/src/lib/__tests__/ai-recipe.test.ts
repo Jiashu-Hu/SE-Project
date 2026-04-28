@@ -96,4 +96,22 @@ describe("generateRecipeFromText", () => {
       /AI generation failed/
     );
   });
+
+  it("ensures every result has the ai-generated tag", async () => {
+    const noTag = { ...VALID_RECIPE, tags: ["italian"] };
+    __setTestClient(makeFakeClient([makeChatResponse(noTag)]));
+
+    const recipe = await generateRecipeFromText("chicken");
+    expect(recipe.tags).toContain("ai-generated");
+    expect(recipe.tags).toContain("italian");
+  });
+
+  it("does not duplicate ai-generated when the model already includes it", async () => {
+    const dup = { ...VALID_RECIPE, tags: ["ai-generated", "italian"] };
+    __setTestClient(makeFakeClient([makeChatResponse(dup)]));
+
+    const recipe = await generateRecipeFromText("chicken");
+    const aiTagCount = recipe.tags.filter((t) => t === "ai-generated").length;
+    expect(aiTagCount).toBe(1);
+  });
 });
