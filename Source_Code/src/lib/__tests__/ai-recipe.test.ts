@@ -82,4 +82,18 @@ describe("generateRecipeFromText", () => {
     const recipe = await generateRecipeFromText("chicken");
     expect(recipe.title).toBe("Pasta Aglio e Olio");
   });
+
+  it("throws when both attempts fail validation", async () => {
+    const invalid = { ...VALID_RECIPE, servings: 0 }; // servings must be >= 1
+    __setTestClient(
+      makeFakeClient([
+        makeChatResponse(invalid),
+        makeChatResponse(invalid),
+      ])
+    );
+
+    await expect(generateRecipeFromText("chicken")).rejects.toThrow(
+      /AI generation failed/
+    );
+  });
 });
