@@ -36,15 +36,13 @@ beforeAll(async () => {
 });
 
 afterEach(async () => {
-  // Drop all recipe rows; schema persists across tests.
+  // Reset all four tables; schema persists across tests. CASCADE handles
+  // FK chains (sessions/reset_tokens/recipes all reference users).
   if (pglite) {
-    await pglite.exec("truncate table recipes restart identity cascade;");
+    await pglite.exec(
+      "truncate table users, sessions, password_reset_tokens, recipes restart identity cascade;"
+    );
   }
-
-  // Reset still-in-memory auth stores (Phase 2 will move these into Postgres).
-  const g = globalThis as Record<string, unknown>;
-  delete g.authStore;
-  delete g.passwordResetStore;
 });
 
 afterAll(async () => {
