@@ -22,13 +22,13 @@ describe("GET /api/auth/me", () => {
   });
 
   it("returns the current user when the cookie is valid", async () => {
-    const reg = registerUser({
+    const reg = await registerUser({
       name: "Alice",
       email: "alice@example.com",
       password: "Strong1Pass",
     });
     if (!("user" in reg)) throw new Error("setup failed");
-    const session = createSession(reg.user.id);
+    const session = await createSession(reg.user.id);
     cookieJar.set(AUTH_SESSION_COOKIE, session.token);
 
     const res = await GET();
