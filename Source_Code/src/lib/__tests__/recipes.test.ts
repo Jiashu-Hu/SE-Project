@@ -7,6 +7,7 @@ import {
   updateRecipe,
   deleteRecipe,
 } from "@/lib/recipes";
+import { registerUser } from "@/lib/auth";
 import type { CreateRecipePayload } from "@/types/recipe";
 
 const samplePayload: CreateRecipePayload = {
@@ -21,6 +22,16 @@ const samplePayload: CreateRecipePayload = {
   tags: [],
 };
 
+async function makeUser(label: string): Promise<string> {
+  const reg = await registerUser({
+    name: label,
+    email: `${label.toLowerCase()}@example.com`,
+    password: "Strong1Pass",
+  });
+  if (!("user" in reg)) throw new Error(`setup failed: ${reg.error}`);
+  return reg.user.id;
+}
+
 describe("recipes store (Postgres-backed)", () => {
   it("getAllRecipes returns [] on an empty database", async () => {
     expect(await getAllRecipes()).toEqual([]);
@@ -33,34 +44,41 @@ describe("recipes store (Postgres-backed)", () => {
   });
 
   it("getRecipeById returns a created recipe", async () => {
-    const created = await createRecipe("alice", samplePayload);
+    const aliceId = await makeUser("Alice");
+    const created = await createRecipe(aliceId, samplePayload);
     const fetched = await getRecipeById(created.id);
     expect(fetched).toEqual(created);
   });
 
   it("getRecipesByAuthor returns only that author's recipes", async () => {
-    const created = await createRecipe("alice", samplePayload);
-    const aliceRecipes = await getRecipesByAuthor("alice");
+    const aliceId = await makeUser("Alice");
+    const bobId = await makeUser("Bob");
+    const created = await createRecipe(aliceId, samplePayload);
+    const aliceRecipes = await getRecipesByAuthor(aliceId);
     expect(aliceRecipes).toHaveLength(1);
     expect(aliceRecipes[0]).toEqual(created);
-    expect(await getRecipesByAuthor("bob")).toEqual([]);
+    expect(await getRecipesByAuthor(bobId)).toEqual([]);
   });
 
   it("getRecipesByAuthor returns [] for unknown author", async () => {
-    expect(await getRecipesByAuthor("nobody")).toEqual([]);
+    expect(
+      await getRecipesByAuthor("00000000-0000-0000-0000-000000000000")
+    ).toEqual([]);
   });
 
   it("createRecipe assigns id, authorId, createdAt, and trims fields", async () => {
-    const created = await createRecipe("bob", { ...samplePayload, title: "  Eggs  " });
+    const bobId = await makeUser("Bob");
+    const created = await createRecipe(bobId, { ...samplePayload, title: "  Eggs  " });
     expect(created.id).toMatch(/^[0-9a-f-]{36}$/);
-    expect(created.authorId).toBe("bob");
+    expect(created.authorId).toBe(bobId);
     expect(created.title).toBe("Eggs");
     expect(typeof created.createdAt).toBe("string");
     expect(await getRecipeById(created.id)).toEqual(created);
   });
 
   it("updateRecipe replaces fields but preserves id, authorId, createdAt", async () => {
-    const created = await createRecipe("bob", samplePayload);
+    const bobId = await makeUser("Bob");
+    const created = await createRecipe(bobId, samplePayload);
     const updated = await updateRecipe(created.id, {
       ...samplePayload,
       title: "Different",
@@ -68,7 +86,7 @@ describe("recipes store (Postgres-backed)", () => {
     });
     expect(updated).not.toBeNull();
     expect(updated?.id).toBe(created.id);
-    expect(updated?.authorId).toBe("bob");
+    expect(updated?.authorId).toBe(bobId);
     expect(updated?.createdAt).toBe(created.createdAt);
     expect(updated?.title).toBe("Different");
     expect(updated?.servings).toBe(4);
@@ -81,7 +99,8 @@ describe("recipes store (Postgres-backed)", () => {
   });
 
   it("deleteRecipe removes the recipe and returns true", async () => {
-    const created = await createRecipe("carol", samplePayload);
+    const carolId = await makeUser("Carol");
+    const created = await createRecipe(carolId, samplePayload);
     expect(await deleteRecipe(created.id)).toBe(true);
     expect(await getRecipeById(created.id)).toBeUndefined();
   });
