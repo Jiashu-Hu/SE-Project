@@ -69,4 +69,17 @@ describe("generateRecipeFromText", () => {
     expect(recipe.servings).toBe(2);
     expect(recipe.ingredients).toHaveLength(2);
   });
+
+  it("retries once when the first response fails validation", async () => {
+    const invalid = { ...VALID_RECIPE, title: "" }; // empty title fails validation
+    __setTestClient(
+      makeFakeClient([
+        makeChatResponse(invalid),
+        makeChatResponse(VALID_RECIPE),
+      ])
+    );
+
+    const recipe = await generateRecipeFromText("chicken");
+    expect(recipe.title).toBe("Pasta Aglio e Olio");
+  });
 });

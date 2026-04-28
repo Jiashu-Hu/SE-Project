@@ -145,13 +145,31 @@ async function callOnce(
   return { error: result.error };
 }
 
+async function generateWithRetry(
+  initialMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[]
+): Promise<CreateRecipePayload> {
+  const first = await callOnce(initialMessages);
+  if ("payload" in first) return first.payload;
+
+  // Retry once with the validation error fed back as a follow-up turn.
+  const followUp: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+    ...initialMessages,
+    {
+      role: "user",
+      content: `Your previous response failed validation: ${first.error}. Please return valid JSON matching the schema.`,
+    },
+  ];
+  const second = await callOnce(followUp);
+  if ("payload" in second) return second.payload;
+
+  throw new Error(`AI generation failed: ${second.error}`);
+}
+
 export async function generateRecipeFromText(
   text: string
 ): Promise<CreateRecipePayload> {
-  const result = await callOnce([
+  return generateWithRetry([
     { role: "system", content: SYSTEM_PROMPT },
     { role: "user", content: text },
   ]);
-  if ("payload" in result) return result.payload;
-  throw new Error(`AI generation failed: ${result.error}`);
 }
