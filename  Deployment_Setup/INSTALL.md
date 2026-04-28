@@ -154,6 +154,8 @@ needs no configuration.
 #### Database setup (Supabase)
 
 > **Already on Phase 1?** Run `Source_Code/supabase/migrations/2026-04-27-phase-2-auth.sql` in the SQL Editor instead of `schema.sql`. The migration adds the auth tables without re-creating the `recipes` table (though it does truncate it — see the file's header comment).
+>
+> **Already on the AI Recipe Generator phase?** Run `Source_Code/supabase/migrations/2026-04-28-meal-plan.sql` in the SQL Editor to add the meal planner tables (`meal_plan_slots`, `ingredient_aisles`). No data is destroyed.
 
 1. Create a free Supabase project at https://supabase.com.
 2. In your project dashboard: **SQL Editor → New query**, paste the
