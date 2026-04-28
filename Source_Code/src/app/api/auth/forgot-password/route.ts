@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: emailCheck.error }, { status: 400 });
   }
 
-  const result = createPasswordResetToken(email);
+  const result = await createPasswordResetToken(email);
   const token = "token" in result ? result.token : "";
 
   // Always respond with 200 and an identical shape regardless of whether the

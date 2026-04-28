@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: passwordCheck.error }, { status: 400 });
   }
 
-  const result = resetPasswordWithToken(token.trim(), newPassword);
+  const result = await resetPasswordWithToken(token.trim(), newPassword);
 
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 400 });
