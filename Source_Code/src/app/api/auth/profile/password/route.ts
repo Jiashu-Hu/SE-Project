@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: passwordCheck.error }, { status: 400 });
   }
 
-  const result = changeUserPassword({
+  const result = await changeUserPassword({
     userId: user.id,
     currentPassword: payload.currentPassword,
     newPassword: payload.newPassword,

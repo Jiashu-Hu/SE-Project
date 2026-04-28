@@ -41,7 +41,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: emailCheck.error }, { status: 400 });
   }
 
-  const result = updateUserProfile({
+  const result = await updateUserProfile({
     userId: user.id,
     name: payload.name,
     email: payload.email,
