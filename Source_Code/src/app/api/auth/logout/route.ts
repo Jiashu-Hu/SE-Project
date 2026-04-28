@@ -8,7 +8,7 @@ export async function POST() {
   const token = cookieStore.get(AUTH_SESSION_COOKIE)?.value;
 
   if (token) {
-    deleteSession(token);
+    await deleteSession(token);
   }
 
   const response = NextResponse.json({ success: true });
