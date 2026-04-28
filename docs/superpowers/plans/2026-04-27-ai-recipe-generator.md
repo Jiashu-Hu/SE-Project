@@ -10,7 +10,7 @@
 - `openai` 6.35.0 (works against any OpenAI-compatible base URL)
 - GPTGOD gateway at `https://api.gptgod.online/v1`
 - Model: `gpt-4.1-mini`
-- API key env var: `GPDGOD_KEY` (matches the name the user supplied)
+- API key env var: `GPTGOD_KEY` (matches the name the user supplied)
 - Browser `<canvas>` API for client-side image compression (no extra deps)
 - Reuses: `lib/recipe-validation.ts`, `lib/auth-server.ts`, `lib/db.ts` test seam pattern, `RecipeForm`
 
@@ -54,7 +54,7 @@
 | Path | Change |
 |---|---|
 | `Source_Code/package.json` | Add `openai@^6.35.0`. |
-| `Source_Code/.env.local.example` | Document `GPDGOD_KEY`. |
+| `Source_Code/.env.local.example` | Document `GPTGOD_KEY`. |
 | `Source_Code/src/components/recipe-form/RecipeForm.tsx` | Accept new optional `defaults: CreateRecipePayload` prop (POST mode with prefill). |
 | `Source_Code/src/app/recipes/new/page.tsx` | Add a "✨ Generate with AI" link banner at the top. |
 | ` Deployment_Setup/INSTALL.md` | Add GPTGOD API key setup. |
@@ -104,7 +104,7 @@ Edit `Source_Code/.env.local.example` and append:
 # Required for the AI recipe generator at /recipes/generate.
 # In Vercel, set this in Project Settings → Environment Variables for
 # Production, Preview, and Development.
-GPDGOD_KEY=
+GPTGOD_KEY=
 ```
 
 - [ ] **Step 4: Commit**
@@ -229,10 +229,10 @@ let cachedClient: OpenAI | null = null;
 const BASE_URL = "https://api.gptgod.online/v1";
 
 function buildClient(): OpenAI {
-  const key = process.env.GPDGOD_KEY;
+  const key = process.env.GPTGOD_KEY;
   if (!key) {
     throw new Error(
-      "GPDGOD_KEY is required. Set it in Source_Code/.env.local."
+      "GPTGOD_KEY is required. Set it in Source_Code/.env.local."
     );
   }
   return new OpenAI({ apiKey: key, baseURL: BASE_URL });
@@ -1647,7 +1647,7 @@ GPTGOD gateway (an OpenAI-compatible service).
 1. Sign up at https://gptgod.online and create an API key.
 2. Add it to `Source_Code/.env.local`:
    ```bash
-   GPDGOD_KEY=sk-...
+   GPTGOD_KEY=sk-...
    ```
 3. For the Vercel deployment, add it under **Project Settings → Environment
    Variables** for Production, Preview, and Development.
@@ -1681,7 +1681,7 @@ or photo), edit, search, filter by category, and delete.
 git add " Deployment_Setup/INSTALL.md" README.md
 git commit -m "docs: cover AI generator setup + feature list
 
-INSTALL.md gets a new section for the GPDGOD_KEY setup
+INSTALL.md gets a new section for the GPTGOD_KEY setup
 (local + Vercel). README mentions AI-from-text and AI-from-photo
 under features."
 ```
@@ -1720,18 +1720,18 @@ git push upstream main
 
 - [ ] **Step 4: Watch Vercel auto-deploy**
 
-Open the Vercel dashboard. Within ~30s, a new deploy should kick off. **It will fail at runtime** until you add `GPDGOD_KEY` to the project's environment variables — but the build itself should succeed (the lib reads the env lazily).
+Open the Vercel dashboard. Within ~30s, a new deploy should kick off. **It will fail at runtime** until you add `GPTGOD_KEY` to the project's environment variables — but the build itself should succeed (the lib reads the env lazily).
 
 ---
 
-### Task 17: Set `GPDGOD_KEY` in Vercel + smoke
+### Task 17: Set `GPTGOD_KEY` in Vercel + smoke
 
 This is a manual task.
 
 - [ ] **Step 1: Add the env var in Vercel**
 
 Vercel dashboard → your project → **Settings → Environment Variables**:
-- **Key:** `GPDGOD_KEY`
+- **Key:** `GPTGOD_KEY`
 - **Value:** your real key from the GPTGOD dashboard
 - **Environments:** Production + Preview + Development
 
@@ -1784,7 +1784,7 @@ Delete the smoke recipes from your dashboard.
 - §3 Architecture file list — every Created/Modified file in spec maps to a task. ✅ (Note: spec said Anthropic; this plan uses GPTGOD/OpenAI per user direction. Functionally equivalent — same lib boundaries, same test seam, same auto-tag, same save flow.)
 - §4 Decisions all surface as task-level constants. ✅
 - §5 Test strategy: 8 lib unit tests + 8 route integration tests. ✅
-- §6 Prerequisites: GPDGOD_KEY documented in T1, T15, T17. ✅
+- §6 Prerequisites: GPTGOD_KEY documented in T1, T15, T17. ✅
 - §7 Risks all addressed via baked-in decisions or task notes. ✅
 
 **Placeholder scan:** No "TBD" / "TODO" / "implement later" / "similar to Task N". All step bodies show concrete code or commands.
@@ -1796,7 +1796,7 @@ Delete the smoke recipes from your dashboard.
 - `defaults` prop on `RecipeForm` — defined T9, used T11.
 - `onGenerated` callback `(recipe: CreateRecipePayload) => void` — same in T10 and T11.
 - Tool/schema name `recipe` — consistent across T2 (definition).
-- Env var `GPDGOD_KEY` — consistent across T1, T2, T15, T17.
+- Env var `GPTGOD_KEY` — consistent across T1, T2, T15, T17.
 - Constants `MODEL = "gpt-4.1-mini"`, `BASE_URL = "https://api.gptgod.online/v1"` — declared once in T2.
 
 **Open assumptions to verify during execution:**
