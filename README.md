@@ -6,7 +6,8 @@ or photo), edit, search, filter by category, and delete. They can save
 recipes into a "bucket" (drag-and-drop on desktop, tap on mobile), then plan
 a week of meals (morning / noon / evening per day) by dragging from the
 bucket onto day slots, and auto-generate a categorized shopping list with
-check-off boxes.
+check-off boxes. The recipe form features ingredient autocomplete with default-unit pre-fill,
+backed by a hybrid global + per-user catalog that grows automatically.
 
 **Live:** [se-project-jade-eight.vercel.app](https://se-project-jade-eight.vercel.app/) (test account: `test@test.com` / `test`)
 

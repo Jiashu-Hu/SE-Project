@@ -160,6 +160,13 @@ needs no configuration.
 > **Already on the Meal Planner phase?** Run
 > `Source_Code/supabase/migrations/2026-04-28-bucket.sql` in the SQL Editor
 > to add the `bucket_items` table. No data is destroyed.
+>
+> **Already on the Bucket Layer phase?** Run
+> `Source_Code/supabase/migrations/2026-04-29-ingredient-catalog.sql` in the
+> Supabase SQL Editor to add the `ingredients` table. Then load the seed:
+> `cd Source_Code && DATABASE_URL=... node scripts/load-ingredient-seed.mjs`.
+> Optionally backfill existing recipes:
+> `DATABASE_URL=... node scripts/backfill-ingredient-catalog.mjs`. Both scripts are idempotent.
 
 1. Create a free Supabase project at https://supabase.com.
 2. In your project dashboard: **SQL Editor → New query**, paste the
