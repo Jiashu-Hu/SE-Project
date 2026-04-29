@@ -40,7 +40,7 @@ afterEach(async () => {
   // FK chains (sessions/reset_tokens/recipes all reference users).
   if (pglite) {
     await pglite.exec(
-      "truncate table users, sessions, password_reset_tokens, recipes, meal_plan_slots, ingredient_aisles, bucket_items restart identity cascade;"
+      "truncate table users, sessions, password_reset_tokens, recipes, meal_plan_slots, ingredient_aisles, bucket_items, ingredients restart identity cascade;"
     );
   }
 });
