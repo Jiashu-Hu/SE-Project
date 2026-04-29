@@ -2,9 +2,11 @@
 
 A web application for personal recipe organization. Users register, log in,
 and manage their own recipes — create (manually or via AI from a description
-or photo), edit, search, filter by category, and delete. They can plan a
-week of meals (morning / noon / evening per day) and auto-generate a
-categorized shopping list with check-off boxes.
+or photo), edit, search, filter by category, and delete. They can save
+recipes into a "bucket" (drag-and-drop on desktop, tap on mobile), then plan
+a week of meals (morning / noon / evening per day) by dragging from the
+bucket onto day slots, and auto-generate a categorized shopping list with
+check-off boxes.
 
 **Live:** [se-project-jade-eight.vercel.app](https://se-project-jade-eight.vercel.app/) (test account: `test@test.com` / `test`)
 
