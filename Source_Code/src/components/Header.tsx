@@ -86,6 +86,15 @@ export function Header({ searchQuery, onSearchChange, userName }: HeaderProps) {
           Meal Plan
         </Link>
 
+        {/* Mobile-only bucket link */}
+        <Link
+          href="/bucket"
+          className="shrink-0 text-sm font-medium text-zinc-700 hover:text-orange-600 md:hidden dark:text-zinc-300 dark:hover:text-orange-400"
+          aria-label="Bucket"
+        >
+          🛒
+        </Link>
+
         {/* Add Recipe Button */}
         <Link
           href="/recipes/new"
