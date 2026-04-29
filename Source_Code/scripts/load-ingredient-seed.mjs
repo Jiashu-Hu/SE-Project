@@ -41,14 +41,20 @@ let skipped = 0;
 try {
   for (const r of seed) {
     const norm = String(r.name).trim().toLowerCase();
-    const result = await pool.query(
+    const existing = await pool.query(
+      `select 1 from ingredients where user_id is null and name_normalized = $1 limit 1`,
+      [norm]
+    );
+    if (existing.rowCount > 0) {
+      skipped++;
+      continue;
+    }
+    await pool.query(
       `insert into ingredients (user_id, name, name_normalized, default_unit, aisle, source)
-         values (null, $1, $2, $3, $4, 'seed')
-         on conflict (user_id, name_normalized) do nothing`,
+         values (null, $1, $2, $3, $4, 'seed')`,
       [r.name, norm, r.defaultUnit, r.aisle]
     );
-    if (result.rowCount > 0) inserted++;
-    else skipped++;
+    inserted++;
   }
   console.log(`Seed load: ${inserted} inserted, ${skipped} skipped (already present).`);
 } finally {
