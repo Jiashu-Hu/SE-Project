@@ -13,6 +13,7 @@
     "db:seed": "node scripts/seed-dev-user.mjs"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
     "next": "16.1.6",
     "openai": "^6.35.0",
     "pg": "^8.20.0",
