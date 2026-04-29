@@ -1,6 +1,7 @@
 import { getDb } from "@/lib/db";
 import type { QueryRow } from "@/lib/db";
 import type { Aisle } from "@/lib/ingredient-aisles";
+import { keywordClassify } from "@/lib/ingredient-aisles";
 
 export interface Ingredient {
   readonly id: string;
@@ -98,4 +99,92 @@ export async function seedGlobal(rows: readonly SeedRow[]): Promise<number> {
     if (result.rowCount > 0) inserted++;
   }
   return inserted;
+}
+
+function rowToIngredient(row: IngredientRow): Ingredient {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    name: row.name,
+    defaultUnit: row.default_unit,
+    aisle: row.aisle,
+    source: row.source,
+  };
+}
+
+async function syncAisleCache(
+  itemNormalized: string,
+  aisle: Aisle
+): Promise<void> {
+  const db = getDb();
+  await db.query(
+    `insert into ingredient_aisles (item_normalized, aisle, source)
+       values ($1, $2, 'llm')
+       on conflict (item_normalized) do nothing`,
+    [itemNormalized, aisle]
+  );
+}
+
+export async function getOrCreateIngredient(
+  userId: string,
+  rawName: string,
+  hints: { unit?: string; source?: "user" | "ai" | "backfill" } = {}
+): Promise<Ingredient> {
+  if (!isUuid(userId)) throw new Error("Invalid userId.");
+  const trimmed = rawName.trim();
+  if (trimmed.length === 0) throw new Error("Empty ingredient name.");
+  if (trimmed.length > 80) throw new Error("Ingredient name too long.");
+  const norm = normalize(trimmed);
+  const db = getDb();
+
+  // 1. Try existing per-user row first.
+  const existingUser = await db.query<IngredientRow>(
+    `select id, user_id, name, name_normalized, default_unit, aisle, source
+       from ingredients
+      where user_id = $1 and name_normalized = $2
+      limit 1`,
+    [userId, norm]
+  );
+  if (existingUser.rows[0]) return rowToIngredient(existingUser.rows[0]);
+
+  // 2. Try existing global row.
+  const existingGlobal = await db.query<IngredientRow>(
+    `select id, user_id, name, name_normalized, default_unit, aisle, source
+       from ingredients
+      where user_id is null and name_normalized = $1
+      limit 1`,
+    [norm]
+  );
+  if (existingGlobal.rows[0]) return rowToIngredient(existingGlobal.rows[0]);
+
+  // 3. Classify aisle: keyword first, fall back to 'Other'.
+  // (LLM fallback is reserved for the shopping-list batch path; per-item
+  // misclassifications round-trip through that cache anyway.)
+  const aisle: Aisle = keywordClassify(norm) ?? "Other";
+
+  const inserted = await db.query<IngredientRow>(
+    `insert into ingredients
+       (user_id, name, name_normalized, default_unit, aisle, source)
+     values ($1, $2, $3, $4, $5, $6)
+     returning id, user_id, name, name_normalized, default_unit, aisle, source`,
+    [userId, trimmed, norm, hints.unit ?? "", aisle, hints.source ?? "user"]
+  );
+
+  await syncAisleCache(norm, aisle);
+  return rowToIngredient(inserted.rows[0]);
+}
+
+export async function listUserCatalog(
+  userId: string
+): Promise<readonly Ingredient[]> {
+  if (!isUuid(userId)) return [];
+  const db = getDb();
+  const result = await db.query<IngredientRow>(
+    `select id, user_id, name, name_normalized, default_unit, aisle, source
+       from ingredients
+      where user_id is null or user_id = $1
+      order by user_id desc nulls last, name_normalized`,
+    [userId]
+  );
+  return result.rows.map(rowToIngredient);
 }
