@@ -9,7 +9,9 @@ import { classifyIngredients, AISLES } from "@/lib/ingredient-aisles";
 import type { Aisle } from "@/lib/ingredient-aisles";
 import type { AggregatedItem } from "@/lib/shopping-list";
 import { currentWeekStart, mondayOf } from "@/lib/week";
+import { listBucket } from "@/lib/bucket";
 import { ShoppingListClient } from "@/components/shopping-list/ShoppingListClient";
+import { EmptyBucketBanner } from "@/components/bucket/EmptyBucketBanner";
 
 export const metadata: Metadata = { title: "Shopping List | RecipeBox" };
 
@@ -27,7 +29,11 @@ export default async function ShoppingListPage({ searchParams }: PageProps) {
   const requested = sp.week && ISO_DATE_RE.test(sp.week) ? sp.week : null;
   const weekStart = requested ? mondayOf(new Date(`${requested}T00:00:00Z`)) : currentWeekStart();
 
-  const slots = await listSlotsForWeek(user.id, weekStart);
+  const [slots, bucket] = await Promise.all([
+    listSlotsForWeek(user.id, weekStart),
+    listBucket(user.id),
+  ]);
+  const bucketCount = bucket.length;
   const recipeIds = [...new Set(slots.map((s) => s.recipeId))];
   const recipeMap = new Map<string, Awaited<ReturnType<typeof getRecipeById>>>();
   for (const rid of recipeIds) recipeMap.set(rid, await getRecipeById(rid));
@@ -69,6 +75,7 @@ export default async function ShoppingListPage({ searchParams }: PageProps) {
             ← Back to meal plan
           </Link>
         </div>
+        <EmptyBucketBanner weekStart={weekStart} initialCount={bucketCount} />
         <ShoppingListClient weekStart={weekStart} aisles={ordered} />
       </main>
     </div>
