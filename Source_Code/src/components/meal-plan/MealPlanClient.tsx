@@ -43,6 +43,14 @@ export function MealPlanClient({ weekStart, initialSlots, allRecipes }: MealPlan
     return m;
   }, [allRecipes]);
 
+  const bucketRecipes = useMemo(
+    () =>
+      bucketItems
+        .map((it) => recipesById.get(it.recipeId))
+        .filter((r): r is Recipe => r !== undefined),
+    [bucketItems, recipesById]
+  );
+
   const dates = useMemo(() => buildWeekDates(weekStart), [weekStart]);
 
   useEffect(() => {
@@ -156,6 +164,7 @@ export function MealPlanClient({ weekStart, initialSlots, allRecipes }: MealPlan
       <RecipePickerModal
         open={pickerTarget !== null}
         recipes={allRecipes}
+        bucketRecipes={bucketRecipes}
         onSelect={(r) => void handleSelectRecipe(r)}
         onClose={() => setPickerTarget(null)}
       />
