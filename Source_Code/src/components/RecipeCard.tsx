@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useDraggable } from "@dnd-kit/core";
 import type { Recipe } from "@/types/recipe";
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -12,12 +13,32 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 interface RecipeCardProps {
   readonly recipe: Recipe;
+  readonly draggable?: boolean;
 }
 
-export function RecipeCard({ recipe }: RecipeCardProps) {
+export function RecipeCard({ recipe, draggable = false }: RecipeCardProps) {
   const badgeColor = CATEGORY_COLORS[recipe.category] ?? CATEGORY_COLORS.Other;
 
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: `recipe:${recipe.id}`,
+      data: { recipeId: recipe.id },
+      disabled: !draggable,
+    });
+  const dragStyle = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        zIndex: isDragging ? 50 : undefined,
+      }
+    : undefined;
+
   return (
+    <div
+      ref={setNodeRef}
+      style={dragStyle}
+      {...(draggable ? listeners : {})}
+      {...(draggable ? attributes : {})}
+    >
     <Link
       href={`/recipes/${recipe.id}`}
       className="group flex w-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white text-left transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950"
@@ -72,5 +93,6 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
         </div>
       </div>
     </Link>
+    </div>
   );
 }

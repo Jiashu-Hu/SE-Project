@@ -5,9 +5,10 @@ import { RecipeCard } from "./RecipeCard";
 interface RecipeGridProps {
   readonly recipes: readonly Recipe[];
   readonly totalRecipes: number;
+  readonly draggable?: boolean;
 }
 
-export function RecipeGrid({ recipes, totalRecipes }: RecipeGridProps) {
+export function RecipeGrid({ recipes, totalRecipes, draggable = false }: RecipeGridProps) {
   if (recipes.length === 0) {
     const isFiltered = totalRecipes > 0;
 
@@ -39,7 +40,7 @@ export function RecipeGrid({ recipes, totalRecipes }: RecipeGridProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {recipes.map((recipe) => (
-        <RecipeCard key={recipe.id} recipe={recipe} />
+        <RecipeCard key={recipe.id} recipe={recipe} draggable={draggable} />
       ))}
     </div>
   );
