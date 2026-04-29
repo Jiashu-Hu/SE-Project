@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { CATEGORIES } from "@/types/recipe";
 import type { CreateRecipePayload, Ingredient, Recipe, RecipeCategory } from "@/types/recipe";
+import { IngredientCombobox } from "@/components/ingredients/IngredientCombobox";
 
 interface IngredientRow {
   readonly amount: string;
@@ -297,14 +298,21 @@ export function RecipeForm({ existingRecipe, defaults }: RecipeFormProps) {
                 aria-label={`Ingredient ${index + 1} unit`}
                 className="w-24 shrink-0 rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
               />
-              <input
-                type="text"
-                value={ing.item}
-                onChange={(e) => updateIngredient(index, "item", e.target.value)}
-                placeholder="all-purpose flour"
-                aria-label={`Ingredient ${index + 1} name`}
-                className="min-w-0 flex-1 rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-              />
+              <div className="min-w-0 flex-1">
+                <IngredientCombobox
+                  id={`ing-item-${index}`}
+                  ariaLabel={`Ingredient ${index + 1} name`}
+                  placeholder="all-purpose flour"
+                  value={ing.item}
+                  onChange={(v) => updateIngredient(index, "item", v)}
+                  onSelect={(sug) => {
+                    updateIngredient(index, "item", sug.name);
+                    if (ing.unit.trim() === "") {
+                      updateIngredient(index, "unit", sug.defaultUnit);
+                    }
+                  }}
+                />
+              </div>
               <button
                 type="button"
                 onClick={() => removeIngredient(index)}
