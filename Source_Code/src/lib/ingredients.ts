@@ -88,17 +88,20 @@ export async function searchIngredients(
 export async function seedGlobal(rows: readonly SeedRow[]): Promise<number> {
   if (rows.length === 0) return 0;
   const db = getDb();
-  let inserted = 0;
+  const valueClauses: string[] = [];
+  const params: unknown[] = [];
   for (const r of rows) {
-    const result = await db.query(
-      `insert into ingredients (user_id, name, name_normalized, default_unit, aisle, source)
-         values (null, $1, $2, $3, $4, 'seed')
-         on conflict (user_id, name_normalized) do nothing`,
-      [r.name, normalize(r.name), r.defaultUnit, r.aisle]
-    );
-    if (result.rowCount > 0) inserted++;
+    const i = params.length;
+    valueClauses.push(`(null, $${i + 1}, $${i + 2}, $${i + 3}, $${i + 4}, 'seed')`);
+    params.push(r.name, normalize(r.name), r.defaultUnit, r.aisle);
   }
-  return inserted;
+  const result = await db.query(
+    `insert into ingredients (user_id, name, name_normalized, default_unit, aisle, source)
+       values ${valueClauses.join(", ")}
+       on conflict (user_id, name_normalized) do nothing`,
+    params
+  );
+  return result.rowCount;
 }
 
 function rowToIngredient(row: IngredientRow): Ingredient {
