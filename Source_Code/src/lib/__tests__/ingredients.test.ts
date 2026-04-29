@@ -78,8 +78,11 @@ describe("searchIngredients", () => {
 describe("getOrCreateIngredient", () => {
   it("creates a new per-user entry with keyword-classified aisle", async () => {
     const u = await newUser();
-    const ing = await getOrCreateIngredient(u, "Tomato");
-    expect(ing.name).toBe("Tomato");
+    // "Cherry tomato" is not in the global seed (so we exercise the
+    // create-new-user-entry path) and contains the keyword "tomato" (so the
+    // classifier returns Produce).
+    const ing = await getOrCreateIngredient(u, "Cherry tomato");
+    expect(ing.name).toBe("Cherry tomato");
     expect(ing.userId).toBe(u);
     expect(ing.aisle).toBe("Produce");
     expect(ing.source).toBe("user");
@@ -101,8 +104,10 @@ describe("getOrCreateIngredient", () => {
   it("treats different users as separate scopes", async () => {
     const u1 = await newUser();
     const u2 = await newUser();
-    const a = await getOrCreateIngredient(u1, "Quinoa");
-    const b = await getOrCreateIngredient(u2, "Quinoa");
+    // Use a name not present in the global seed so each user creates a
+    // distinct per-user row instead of sharing the global row.
+    const a = await getOrCreateIngredient(u1, "Salsify");
+    const b = await getOrCreateIngredient(u2, "Salsify");
     expect(a.id).not.toBe(b.id);
     expect(a.userId).toBe(u1);
     expect(b.userId).toBe(u2);
@@ -118,10 +123,13 @@ describe("getOrCreateIngredient", () => {
 
   it("syncs new entries into ingredient_aisles cache", async () => {
     const u = await newUser();
-    await getOrCreateIngredient(u, "Carrot");
+    // "Baby spinach" is not in the global seed (so getOrCreateIngredient
+    // creates a fresh row and writes the aisle cache) and contains the
+    // keyword "spinach" so the classifier returns Produce.
+    await getOrCreateIngredient(u, "Baby spinach");
     const { getDb } = await import("@/lib/db");
     const r = await getDb().query<{ aisle: string }>(
-      `select aisle from ingredient_aisles where item_normalized = 'carrot'`
+      `select aisle from ingredient_aisles where item_normalized = 'baby spinach'`
     );
     expect(r.rows[0]?.aisle).toBe("Produce");
   });
@@ -139,7 +147,9 @@ describe("getOrCreateIngredient", () => {
 
   it("accepts source override", async () => {
     const u = await newUser();
-    const ing = await getOrCreateIngredient(u, "Lentils", { source: "ai" });
+    // Use a name not present in the global seed so the source override is
+    // applied to the fresh per-user row instead of the existing seed row.
+    const ing = await getOrCreateIngredient(u, "Fenugreek", { source: "ai" });
     expect(ing.source).toBe("ai");
   });
 });
@@ -147,11 +157,20 @@ describe("getOrCreateIngredient", () => {
 describe("listUserCatalog", () => {
   it("returns only the user's own + global entries", async () => {
     const u = await newUser();
+    // Salt is already in the global seed; reseeding is a no-op (ON CONFLICT
+    // DO NOTHING). "Bok choy" is not in the seed and is created as a per-user
+    // entry. Filter the result to source === "user" so the assertion is
+    // deterministic even though ~200 globals are present from the bootstrap.
     await seedGlobal([{ name: "Salt", defaultUnit: "tsp", aisle: "Pantry" }]);
-    await getOrCreateIngredient(u, "Tomato");
+    await getOrCreateIngredient(u, "Bok choy");
     const list = await listUserCatalog(u);
-    const names = list.map((i) => i.name).sort();
-    expect(names).toEqual(["Salt", "Tomato"]);
+    const userNames = list
+      .filter((i) => i.source === "user")
+      .map((i) => i.name)
+      .sort();
+    expect(userNames).toEqual(["Bok choy"]);
+    // Sanity: globals from the bootstrap are visible alongside the user row.
+    expect(list.some((i) => i.source === "seed" && i.name === "Salt")).toBe(true);
   });
 
   it("returns [] for malformed userId", async () => {
@@ -162,11 +181,17 @@ describe("listUserCatalog", () => {
 describe("cascade", () => {
   it("removes per-user ingredients when user is deleted, keeps global", async () => {
     const u = await newUser();
+    // Sugar is already in the global seed; reseeding is a no-op. "Sorrel" is
+    // not in the seed and is created as a per-user row. After the user is
+    // deleted, the per-user row should cascade away while the globals stay.
     await seedGlobal([{ name: "Sugar", defaultUnit: "cup", aisle: "Pantry" }]);
-    await getOrCreateIngredient(u, "Bok choy");
+    await getOrCreateIngredient(u, "Sorrel");
     const { getDb } = await import("@/lib/db");
     await getDb().query("delete from users where id = $1", [u]);
-    const userList = await listUserCatalog(u);
-    expect(userList.map((i) => i.name)).toEqual(["Sugar"]);
+    const list = await listUserCatalog(u);
+    // No per-user entries remain for the deleted user.
+    expect(list.filter((i) => i.source === "user")).toEqual([]);
+    // Globals (including Sugar from the seed bootstrap) remain.
+    expect(list.some((i) => i.source === "seed" && i.name === "Sugar")).toBe(true);
   });
 });

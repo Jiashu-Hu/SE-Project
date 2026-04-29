@@ -110,3 +110,7 @@ create index if not exists ingredients_user_idx
   on ingredients (user_id);
 create index if not exists ingredients_name_norm_idx
   on ingredients (name_normalized text_pattern_ops);
+
+-- Phase B seed entries are loaded at app/test boot via
+-- src/test/setup.ts → seedGlobal(...) reading data/ingredient-seed.json.
+-- Production loads the same JSON via scripts/load-ingredient-seed.mjs.

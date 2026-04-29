@@ -20,3 +20,8 @@ create index if not exists ingredients_user_idx
   on ingredients (user_id);
 create index if not exists ingredients_name_norm_idx
   on ingredients (name_normalized text_pattern_ops);
+
+-- Phase B seed: production deploys load entries by running
+-- scripts/load-ingredient-seed.mjs (reads data/ingredient-seed.json and inserts
+-- with ON CONFLICT DO NOTHING). The migration file does not embed the seed
+-- because the JSON file is the source of truth and may be regenerated.

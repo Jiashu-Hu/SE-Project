@@ -1,9 +1,13 @@
-import { afterEach, beforeAll, afterAll } from "vitest";
+import { afterEach, beforeAll, afterAll, beforeEach } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { __setTestDb, __resetDb } from "@/lib/db";
 import type { QueryClient, QueryRow } from "@/lib/db";
+import { seedGlobal } from "@/lib/ingredients";
+
+const seedPath = path.resolve(__dirname, "../../data/ingredient-seed.json");
+const seed = JSON.parse(fs.readFileSync(seedPath, "utf8"));
 
 let pglite: PGlite | null = null;
 
@@ -33,6 +37,10 @@ beforeAll(async () => {
   };
 
   __setTestDb(client);
+});
+
+beforeEach(async () => {
+  await seedGlobal(seed);
 });
 
 afterEach(async () => {
