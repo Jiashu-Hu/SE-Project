@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { validateCreateRecipePayload } from "@/lib/recipe-validation";
+import { getOrCreateIngredient, listUserCatalog } from "@/lib/ingredients";
 import type { CreateRecipePayload } from "@/types/recipe";
 
 let cachedClient: OpenAI | null = null;
@@ -165,26 +166,64 @@ async function generateWithRetry(
   throw new Error(`AI generation failed: ${second.error}`);
 }
 
+async function buildSystemPromptWithHints(userId: string): Promise<string> {
+  try {
+    const catalog = await listUserCatalog(userId);
+    if (catalog.length === 0) return SYSTEM_PROMPT;
+    const names = catalog.slice(0, 80).map((c) => c.name).join(", ");
+    return (
+      SYSTEM_PROMPT +
+      `\n\nWhen choosing ingredient names, prefer these (the user has used them before): ${names}.`
+    );
+  } catch {
+    return SYSTEM_PROMPT;
+  }
+}
+
+async function growCatalogFromAI(
+  userId: string,
+  ingredients: readonly { item: string; unit: string }[]
+): Promise<void> {
+  for (const ing of ingredients) {
+    const item = ing.item.trim();
+    if (item.length === 0) continue;
+    try {
+      await getOrCreateIngredient(userId, item, {
+        unit: ing.unit.trim(),
+        source: "ai",
+      });
+    } catch {
+      // Non-fatal.
+    }
+  }
+}
+
 export async function generateRecipeFromText(
+  userId: string,
   text: string
 ): Promise<CreateRecipePayload> {
-  return generateWithRetry([
-    { role: "system", content: SYSTEM_PROMPT },
+  const systemPrompt = await buildSystemPromptWithHints(userId);
+  const payload = await generateWithRetry([
+    { role: "system", content: systemPrompt },
     { role: "user", content: text },
   ]);
+  await growCatalogFromAI(userId, payload.ingredients);
+  return payload;
 }
 
 const IMAGE_DATA_URL_RE = /^data:image\/(?:jpeg|png|gif|webp);base64,(.+)$/;
 
 export async function generateRecipeFromImage(
+  userId: string,
   dataUrl: string
 ): Promise<CreateRecipePayload> {
   if (!IMAGE_DATA_URL_RE.test(dataUrl)) {
     throw new Error("Invalid image data URL");
   }
 
-  return generateWithRetry([
-    { role: "system", content: SYSTEM_PROMPT },
+  const systemPrompt = await buildSystemPromptWithHints(userId);
+  const payload = await generateWithRetry([
+    { role: "system", content: systemPrompt },
     {
       role: "user",
       content: [
@@ -196,4 +235,6 @@ export async function generateRecipeFromImage(
       ],
     },
   ]);
+  await growCatalogFromAI(userId, payload.ingredients);
+  return payload;
 }

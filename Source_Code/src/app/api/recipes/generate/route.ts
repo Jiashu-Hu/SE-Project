@@ -69,8 +69,8 @@ export async function POST(request: Request) {
   try {
     const recipe =
       body.mode === "text"
-        ? await generateRecipeFromText(body.input)
-        : await generateRecipeFromImage(body.input);
+        ? await generateRecipeFromText(user.id, body.input)
+        : await generateRecipeFromImage(user.id, body.input);
     return NextResponse.json({ recipe });
   } catch (err: unknown) {
     const message =
