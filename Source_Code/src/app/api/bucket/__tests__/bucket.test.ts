@@ -10,6 +10,7 @@ vi.mock("next/headers", () => ({
 }));
 
 import { GET, POST, DELETE as DELETE_ALL } from "@/app/api/bucket/route";
+import { DELETE as DELETE_ONE } from "@/app/api/bucket/[recipeId]/route";
 import { registerUser, createSession } from "@/lib/auth";
 import { createRecipe } from "@/lib/recipes";
 import { AUTH_SESSION_COOKIE } from "@/lib/auth-constants";
@@ -105,5 +106,42 @@ describe("DELETE /api/bucket (clear all)", () => {
     const res = await DELETE_ALL(new Request("http://localhost/api/bucket", { method: "DELETE" }));
     expect(res.status).toBe(200);
     expect((await res.json()).cleared).toBe(2);
+  });
+});
+
+function paramsFor(recipeId: string) {
+  return { params: Promise.resolve({ recipeId }) };
+}
+
+describe("DELETE /api/bucket/[recipeId]", () => {
+  it("returns 401 when not logged in", async () => {
+    const res = await DELETE_ONE(
+      new Request("http://localhost/api/bucket/x", { method: "DELETE" }),
+      paramsFor("00000000-0000-0000-0000-000000000000")
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it("returns 404 when the recipe isn't in the bucket", async () => {
+    await login();
+    const res = await DELETE_ONE(
+      new Request("http://localhost/api/bucket/x", { method: "DELETE" }),
+      paramsFor("00000000-0000-0000-0000-000000000000")
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 204 on successful remove", async () => {
+    const { userId } = await login();
+    const recipe = await createRecipe(userId, SAMPLE);
+    await POST(new Request("http://localhost/api/bucket", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ recipeId: recipe.id }),
+    }));
+    const res = await DELETE_ONE(
+      new Request(`http://localhost/api/bucket/${recipe.id}`, { method: "DELETE" }),
+      paramsFor(recipe.id)
+    );
+    expect(res.status).toBe(204);
   });
 });
