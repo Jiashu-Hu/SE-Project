@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { getDb } from "@/lib/db";
 import type { QueryRow } from "@/lib/db";
+import { getOrCreateIngredient } from "@/lib/ingredients";
 import type {
   CreateRecipePayload,
   Recipe,
@@ -53,6 +54,25 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 function isUuid(value: string): boolean {
   return UUID_RE.test(value);
+}
+
+async function growCatalog(
+  userId: string,
+  ingredients: readonly { item: string; unit: string }[],
+  source: "user" | "backfill" = "user"
+): Promise<void> {
+  for (const ing of ingredients) {
+    const item = ing.item.trim();
+    if (item.length === 0) continue;
+    try {
+      await getOrCreateIngredient(userId, item, {
+        unit: ing.unit.trim(),
+        source,
+      });
+    } catch {
+      // Don't fail the recipe save if a single classification call hiccups.
+    }
+  }
 }
 
 export async function getAllRecipes(): Promise<readonly Recipe[]> {
@@ -117,7 +137,9 @@ export async function createRecipe(
       JSON.stringify(payload.tags),
     ]
   );
-  return toRecipe(result.rows[0]);
+  const created = toRecipe(result.rows[0]);
+  await growCatalog(authorId, payload.ingredients);
+  return created;
 }
 
 export async function updateRecipe(
@@ -154,7 +176,10 @@ export async function updateRecipe(
     ]
   );
   const row = result.rows[0];
-  return row ? toRecipe(row) : null;
+  if (!row) return null;
+  const recipe = toRecipe(row);
+  await growCatalog(recipe.authorId, payload.ingredients);
+  return recipe;
 }
 
 export async function deleteRecipe(id: string): Promise<boolean> {
