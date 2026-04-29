@@ -48,6 +48,7 @@ export function DayColumn(props: DayColumnProps) {
         return (
           <EmptySlot
             key={type}
+            date={props.date}
             mealType={type}
             onAdd={() => props.onAdd(props.date, type)}
           />
